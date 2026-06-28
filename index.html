@@ -160,7 +160,10 @@
     .action-row,
     .kid-grid,
     .board-grid,
-    .leader-list {
+    .leader-list,
+    .mini-grid,
+    .audit-list,
+    .history-list {
       display: grid;
       gap: 10px;
     }
@@ -182,6 +185,11 @@
 
     .secondary {
       background: var(--sun);
+    }
+
+    .tertiary {
+      background: var(--mint);
+      color: #163d32;
     }
 
     .ghost {
@@ -329,6 +337,15 @@
       border-color: #cae9d2;
     }
 
+    .chore-item.review {
+      background: #fff9e8;
+      border-color: #f4d987;
+    }
+
+    .chore-item.carryover {
+      border-color: var(--accent);
+    }
+
     .chore-main {
       display: grid;
       gap: 6px;
@@ -347,7 +364,7 @@
 
     .chore-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 8px;
     }
 
@@ -361,6 +378,11 @@
       color: var(--done);
     }
 
+    .review {
+      background: #fff3ce;
+      color: #765400;
+    }
+
     .complete[disabled] {
       cursor: not-allowed;
       opacity: 0.48;
@@ -370,6 +392,67 @@
     .remove {
       background: #fff0e8;
       color: #934326;
+    }
+
+    .danger {
+      background: #ffe9ed;
+      color: var(--danger);
+    }
+
+    .point-input {
+      max-width: 88px;
+      min-height: 42px;
+      padding: 0 10px;
+      font-size: 0.95rem;
+    }
+
+    .inline-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .custom-panel,
+    .history-panel {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    .history-list {
+      max-height: 240px;
+      overflow: auto;
+    }
+
+    .history-row,
+    .audit-row {
+      border-top: 1px solid #edf2f4;
+      padding-top: 8px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .dialog {
+      width: min(92vw, 720px);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0;
+      box-shadow: var(--shadow);
+    }
+
+    .dialog::backdrop {
+      background: rgba(33, 49, 60, 0.42);
+    }
+
+    .dialog-body {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      background: #ffffff;
     }
 
     .leaderboard {
@@ -415,12 +498,12 @@
       }
 
       .field-grid {
-        grid-template-columns: 1.5fr 0.65fr 0.7fr 0.8fr;
+        grid-template-columns: 1.35fr 0.55fr 0.55fr 0.65fr 0.8fr 0.65fr;
         align-items: end;
       }
 
       .action-row {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
       }
 
       .kid-grid {
@@ -433,8 +516,17 @@
       }
 
       .chore-item {
-        grid-template-columns: 1fr 220px;
+        grid-template-columns: 1fr 260px;
         align-items: center;
+      }
+
+      .chore-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr 110px auto;
+        align-items: end;
       }
     }
   </style>
@@ -459,6 +551,10 @@
             <input id="kid-age" type="number" min="2" max="18" inputmode="numeric" placeholder="7">
           </div>
           <div class="field">
+            <label for="kid-pin">PIN</label>
+            <input id="kid-pin" type="password" maxlength="4" inputmode="numeric" placeholder="1234">
+          </div>
+          <div class="field">
             <label for="reward-goal">Goal</label>
             <input id="reward-goal" type="number" min="1" max="200" inputmode="numeric" placeholder="25">
           </div>
@@ -466,13 +562,21 @@
             <label for="prize-input">Prize</label>
             <input id="prize-input" maxlength="40" placeholder="Ice cream">
           </div>
+          <div class="field">
+            <label for="grace-hours">Grace</label>
+            <input id="grace-hours" type="number" min="0" max="168" inputmode="numeric" placeholder="24">
+          </div>
         </div>
 
         <div class="action-row">
           <button class="primary" type="submit">Add Kid</button>
           <button class="secondary" type="button" id="demo-button">Load Demo Family</button>
           <button class="ghost" type="button" id="clear-progress-button">Clear Points</button>
+          <button class="ghost" type="button" id="audit-button">Audit Log</button>
+          <button class="tertiary" type="button" id="export-button">Export</button>
+          <button class="ghost" type="button" id="import-button">Import</button>
         </div>
+        <input class="hidden" id="import-file" type="file" accept="application/json">
 
         <p class="message" id="message" role="status" aria-live="polite"></p>
       </form>
@@ -495,6 +599,16 @@
         <p>Add a name and age, or load the demo family to see how assignment, completion, points, and rewards work.</p>
       </section>
     </section>
+
+    <dialog class="dialog" id="audit-dialog">
+      <div class="dialog-body">
+        <div class="section-header">
+          <h2>Audit Log</h2>
+          <button class="ghost" type="button" id="close-audit-button">Close</button>
+        </div>
+        <div class="audit-list" id="audit-list"></div>
+      </div>
+    </dialog>
   </main>
 
   <script>
@@ -559,8 +673,10 @@
     const form = document.querySelector("#setup-form");
     const kidNameInput = document.querySelector("#kid-name");
     const kidAgeInput = document.querySelector("#kid-age");
+    const kidPinInput = document.querySelector("#kid-pin");
     const rewardGoalInput = document.querySelector("#reward-goal");
     const prizeInput = document.querySelector("#prize-input");
+    const graceHoursInput = document.querySelector("#grace-hours");
     const message = document.querySelector("#message");
     const kidCount = document.querySelector("#kid-count");
     const kidGrid = document.querySelector("#kid-grid");
@@ -569,28 +685,76 @@
     const emptyState = document.querySelector("#empty-state");
     const demoButton = document.querySelector("#demo-button");
     const clearProgressButton = document.querySelector("#clear-progress-button");
+    const auditButton = document.querySelector("#audit-button");
+    const closeAuditButton = document.querySelector("#close-audit-button");
+    const auditDialog = document.querySelector("#audit-dialog");
+    const auditList = document.querySelector("#audit-list");
+    const exportButton = document.querySelector("#export-button");
+    const importButton = document.querySelector("#import-button");
+    const importFile = document.querySelector("#import-file");
     const maxKids = 10;
-    const stateKey = "kid-chore-board-state-v2";
+    const stateKey = "kid-chore-board-state-v3";
     const defaultState = {
+      version: 3,
       kids: [],
       selectedKidId: "",
       activePeriod: "daily",
       rewardGoal: 25,
       prize: "Ice cream",
+      graceHours: 24,
       assignments: {},
-      completions: {}
+      reviews: {},
+      approvals: {},
+      redemptions: {},
+      customChores: {},
+      pointOverrides: {},
+      carryovers: {},
+      auditLog: []
     };
     let state = loadState();
 
     function loadState() {
       try {
-        return { ...defaultState, ...JSON.parse(localStorage.getItem(stateKey)) };
+        const current = localStorage.getItem(stateKey);
+        const previous = localStorage.getItem("kid-chore-board-state-v2");
+        const saved = current ? JSON.parse(current) : previous ? JSON.parse(previous) : {};
+        return normalizeState({ ...defaultState, ...saved });
       } catch {
-        return { ...defaultState };
+        return normalizeState({ ...defaultState });
       }
     }
 
+    function normalizeState(nextState) {
+      nextState.version = 3;
+      nextState.reviews = nextState.reviews || {};
+      nextState.approvals = nextState.approvals || {};
+      nextState.redemptions = nextState.redemptions || {};
+      nextState.customChores = nextState.customChores || {};
+      nextState.pointOverrides = nextState.pointOverrides || {};
+      nextState.carryovers = nextState.carryovers || {};
+      nextState.auditLog = nextState.auditLog || [];
+      nextState.graceHours = Number.isInteger(Number(nextState.graceHours)) ? Number(nextState.graceHours) : 24;
+      if (nextState.completions && !Object.keys(nextState.approvals).length) {
+        nextState.approvals = nextState.completions;
+      }
+      nextState.kids = (nextState.kids || []).map((kid) => ({
+        ...kid,
+        pin: kid.pin || "1234"
+      }));
+      nextState.kids.forEach((kid) => {
+        nextState.assignments[kid.id] = nextState.assignments[kid.id] || {};
+        nextState.reviews[kid.id] = nextState.reviews[kid.id] || {};
+        nextState.approvals[kid.id] = nextState.approvals[kid.id] || {};
+        nextState.redemptions[kid.id] = nextState.redemptions[kid.id] || [];
+        nextState.customChores[kid.id] = nextState.customChores[kid.id] || { daily: [], weekly: [], monthly: [] };
+        nextState.pointOverrides[kid.id] = nextState.pointOverrides[kid.id] || {};
+        nextState.carryovers[kid.id] = nextState.carryovers[kid.id] || {};
+      });
+      return nextState;
+    }
+
     function saveState() {
+      state = normalizeState(state);
       localStorage.setItem(stateKey, JSON.stringify(state));
     }
 
@@ -630,8 +794,10 @@
 
     function syncRewardSettings() {
       const goal = Number(rewardGoalInput.value);
+      const grace = Number(graceHoursInput.value);
       state.rewardGoal = Number.isInteger(goal) && goal > 0 ? goal : 25;
       state.prize = prizeInput.value.trim() || "a prize";
+      state.graceHours = Number.isInteger(grace) && grace >= 0 ? grace : 24;
     }
 
     function getChoreId(kid, period, index) {
@@ -642,26 +808,71 @@
       return state.assignments[kid.id] || {};
     }
 
-    function getKidCompletions(kid) {
-      return state.completions[kid.id] || {};
+    function getKidReviews(kid) {
+      return state.reviews[kid.id] || {};
     }
 
-    function getChorePoints(period) {
-      return sections.find((section) => section.key === period)?.points || 1;
+    function getKidApprovals(kid) {
+      return state.approvals[kid.id] || {};
+    }
+
+    function getKidRedemptions(kid) {
+      return state.redemptions[kid.id] || [];
+    }
+
+    function getKidCustomChores(kid, period) {
+      return state.customChores[kid.id]?.[period] || [];
+    }
+
+    function getPointOverride(kid, choreId) {
+      return state.pointOverrides[kid.id]?.[choreId];
+    }
+
+    function getChorePoints(kid, choreId, period) {
+      const override = Number(getPointOverride(kid, choreId));
+      return Number.isInteger(override) && override > 0 ? override : sections.find((section) => section.key === period)?.points || 1;
+    }
+
+    function getRedeemedPoints(kid) {
+      return getKidRedemptions(kid).reduce((total, item) => total + Number(item.points || 0), 0);
     }
 
     function getStats(kid) {
       const assignments = getKidAssignments(kid);
-      const completions = getKidCompletions(kid);
+      const reviews = getKidReviews(kid);
+      const approvals = getKidApprovals(kid);
       const assignedIds = Object.keys(assignments).filter((id) => assignments[id]);
-      const doneIds = assignedIds.filter((id) => completions[id]);
-      const points = doneIds.reduce((total, choreId) => total + getChorePoints(choreId.split(":")[1]), 0);
-      return { assigned: assignedIds.length, done: doneIds.length, points };
+      const reviewIds = assignedIds.filter((id) => reviews[id] && !approvals[id]);
+      const approvedIds = assignedIds.filter((id) => approvals[id]);
+      const earned = approvedIds.reduce((total, choreId) => total + getChorePoints(kid, choreId, choreId.split(":")[1]), 0);
+      const redeemed = getRedeemedPoints(kid);
+      return { assigned: assignedIds.length, review: reviewIds.length, approved: approvedIds.length, earned, redeemed, points: Math.max(0, earned - redeemed) };
     }
 
-    function addKid(name, age) {
+    function logAction(text) {
+      state.auditLog.unshift({ id: `log-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`, at: new Date().toISOString(), text });
+      state.auditLog = state.auditLog.slice(0, 250);
+    }
+
+    function verifyKidPin(kid) {
+      const entered = window.prompt(`Enter ${kid.name}'s 4-digit PIN`);
+      return entered === kid.pin;
+    }
+
+    function getAllChores(kid, period) {
+      const plan = chorePlans[kid.rangeKey];
+      const presetChores = plan[period].map((name, index) => ({
+        id: getChoreId(kid, period, index),
+        name,
+        custom: false
+      }));
+      return [...presetChores, ...getKidCustomChores(kid, period)];
+    }
+
+    function addKid(name, age, pin) {
       const trimmedName = name.trim();
       const parsedAge = Number(age);
+      const trimmedPin = pin.trim();
       const rangeKey = getRangeForAge(parsedAge);
 
       if (!trimmedName) {
@@ -679,19 +890,31 @@
         return;
       }
 
+      if (!/^\d{4}$/.test(trimmedPin)) {
+        setMessage("PIN needs to be 4 numbers.", "error");
+        return;
+      }
+
       if (state.kids.some((kid) => kid.name.toLowerCase() === trimmedName.toLowerCase())) {
         setMessage(`${trimmedName} is already on the board.`, "error");
         return;
       }
 
-      const kid = { id: makeId(trimmedName), name: trimmedName, age: parsedAge, rangeKey };
+      const kid = { id: makeId(trimmedName), name: trimmedName, age: parsedAge, rangeKey, pin: trimmedPin };
       state.kids.push(kid);
       state.selectedKidId = kid.id;
       state.assignments[kid.id] = {};
-      state.completions[kid.id] = {};
+      state.reviews[kid.id] = {};
+      state.approvals[kid.id] = {};
+      state.redemptions[kid.id] = [];
+      state.customChores[kid.id] = { daily: [], weekly: [], monthly: [] };
+      state.pointOverrides[kid.id] = {};
+      state.carryovers[kid.id] = {};
       kidNameInput.value = "";
       kidAgeInput.value = "";
+      kidPinInput.value = "";
       setMessage(`${kid.name} added.`);
+      logAction(`${kid.name} was added at age ${kid.age}.`);
       saveState();
       render();
     }
@@ -699,6 +922,7 @@
     function render() {
       rewardGoalInput.value = state.rewardGoal;
       prizeInput.value = state.prize;
+      graceHoursInput.value = state.graceHours;
       kidCount.textContent = `${state.kids.length}/${maxKids}`;
       renderKids();
       renderBoard();
@@ -726,7 +950,7 @@
               <span class="pill">${stats.points}/${state.rewardGoal}</span>
             </span>
             <span class="progress-track" aria-hidden="true"><span class="progress-fill" style="width: ${percent}%"></span></span>
-            <span class="muted">${stats.done} of ${stats.assigned} assigned chores complete</span>
+            <span class="muted">${stats.approved} approved · ${stats.review} waiting · ${stats.assigned} assigned</span>
           </button>
         `;
       }).join("");
@@ -743,7 +967,7 @@
       state.selectedKidId = kid.id;
       const plan = chorePlans[kid.rangeKey];
       const activeSection = sections.find((section) => section.key === state.activePeriod) || sections[0];
-      const chores = plan[activeSection.key];
+      const chores = getAllChores(kid, activeSection.key);
       const stats = getStats(kid);
 
       kidBoard.classList.remove("hidden");
@@ -754,7 +978,11 @@
             <span class="pill">Age ${kid.age}</span>
           </div>
           <p class="muted">${plan.note}</p>
-          <p class="muted">${stats.done} done · ${stats.assigned} assigned · ${stats.points} points</p>
+          <p class="muted">${stats.approved} approved · ${stats.review} waiting for review · ${stats.points} available points · ${state.graceHours}h grace</p>
+          <div class="inline-controls">
+            <button class="tertiary" type="button" data-action="redeem" data-kid-id="${kid.id}" ${stats.points >= state.rewardGoal ? "" : "disabled"}>Cash In</button>
+            <button class="ghost" type="button" data-action="close-period" data-kid-id="${kid.id}" data-period="${activeSection.key}">End ${activeSection.title}</button>
+          </div>
         </div>
         <div class="tab-row" role="tablist" aria-label="Chore frequency">
           ${sections.map((section) => `
@@ -763,32 +991,71 @@
             </button>
           `).join("")}
         </div>
+        <div class="custom-panel">
+          <h3>Add custom ${activeSection.title.toLowerCase()} chore</h3>
+          <div class="mini-grid">
+            <div class="field">
+              <label for="custom-chore-name">Chore</label>
+              <input id="custom-chore-name" maxlength="60" placeholder="Clean entryway">
+            </div>
+            <div class="field">
+              <label for="custom-chore-points">Points</label>
+              <input id="custom-chore-points" type="number" min="1" max="25" inputmode="numeric" placeholder="${activeSection.points}">
+            </div>
+            <button class="primary" type="button" data-action="add-custom" data-kid-id="${kid.id}" data-period="${activeSection.key}">Add</button>
+          </div>
+        </div>
         <div class="chore-list">
-          ${chores.map((chore, index) => getChoreMarkup(kid, activeSection, chore, index)).join("")}
+          ${chores.map((chore) => getChoreMarkup(kid, activeSection, chore)).join("")}
+        </div>
+        <div class="history-panel">
+          <h3>Prize history</h3>
+          <div class="history-list">
+            ${getRedemptionHistoryMarkup(kid)}
+          </div>
         </div>
       `;
     }
 
-    function getChoreMarkup(kid, section, chore, index) {
-      const choreId = getChoreId(kid, section.key, index);
+    function getChoreMarkup(kid, section, chore) {
+      const choreId = chore.id;
       const assigned = Boolean(getKidAssignments(kid)[choreId]);
-      const done = Boolean(getKidCompletions(kid)[choreId]);
+      const review = Boolean(getKidReviews(kid)[choreId]);
+      const approved = Boolean(getKidApprovals(kid)[choreId]);
+      const carryover = Boolean(state.carryovers[kid.id]?.[choreId]);
+      const points = getChorePoints(kid, choreId, section.key);
       return `
-        <article class="chore-item ${done ? "done" : ""}">
+        <article class="chore-item ${approved ? "done" : review ? "review" : ""} ${carryover ? "carryover" : ""}">
           <div class="chore-main">
-            <span class="chore-name">${escapeHtml(chore)}</span>
-            <span class="muted">${section.points} point${section.points === 1 ? "" : "s"} · ${assigned ? done ? "Complete" : "Assigned" : "Not assigned"}</span>
+            <span class="chore-name">${escapeHtml(chore.name)}</span>
+            <span class="muted">${points} point${points === 1 ? "" : "s"} · ${assigned ? approved ? "Approved" : review ? "Done for review" : "Assigned" : "Not assigned"}${carryover ? " · Carryover" : ""}</span>
+            <span class="inline-controls">
+              <label class="muted" for="points-${escapeHtml(choreId)}">Points</label>
+              <input class="point-input" id="points-${escapeHtml(choreId)}" type="number" min="1" max="25" inputmode="numeric" value="${points}" data-action="point-change" data-kid-id="${kid.id}" data-chore-id="${choreId}">
+            </span>
           </div>
           <div class="chore-actions">
             <button class="${assigned ? "remove" : "assign"}" type="button" data-action="toggle-assign" data-kid-id="${kid.id}" data-chore-id="${choreId}">
               ${assigned ? "Unassign" : "Assign"}
             </button>
-            <button class="complete" type="button" data-action="toggle-complete" data-kid-id="${kid.id}" data-chore-id="${choreId}" ${assigned ? "" : "disabled"}>
-              ${done ? "Undo" : "Complete"}
+            <button class="review" type="button" data-action="submit-review" data-kid-id="${kid.id}" data-chore-id="${choreId}" ${assigned && !approved ? "" : "disabled"}>
+              ${review ? "Undo Review" : "Done for Review"}
             </button>
+            <button class="complete" type="button" data-action="approve" data-kid-id="${kid.id}" data-chore-id="${choreId}" ${review && !approved ? "" : "disabled"}>Approve</button>
+            ${chore.custom ? `<button class="danger" type="button" data-action="remove-custom" data-kid-id="${kid.id}" data-chore-id="${choreId}" data-period="${section.key}">Remove</button>` : ""}
           </div>
         </article>
       `;
+    }
+
+    function getRedemptionHistoryMarkup(kid) {
+      const history = getKidRedemptions(kid);
+      if (!history.length) return "<p class=\"muted\">No prizes cashed in yet.</p>";
+      return history.map((item) => `
+        <div class="history-row">
+          <strong>${escapeHtml(item.prize)}</strong> · ${item.points} points · ${new Date(item.at).toLocaleString()} · ${item.remaining} left
+        </div>
+      `).join("");
     }
 
     function renderLeaderboard() {
@@ -803,17 +1070,78 @@
           ${leaders.length ? leaders.map((leader, index) => `
             <div class="leader-row">
               <span>${index + 1}. ${escapeHtml(leader.kid.name)}</span>
-              <span>${leader.stats.points}/${state.rewardGoal}</span>
+              <span>${leader.stats.points}/${state.rewardGoal} available</span>
             </div>
           `).join("") : "<p class=\"muted\">Add kids to start tracking points.</p>"}
         </div>
       `;
     }
 
+    function closePeriod(kid, period) {
+      const assignments = getKidAssignments(kid);
+      const reviews = getKidReviews(kid);
+      const approvals = getKidApprovals(kid);
+      const periodIds = getAllChores(kid, period).map((chore) => chore.id);
+      const missed = periodIds.filter((choreId) => assignments[choreId] && !approvals[choreId]);
+
+      missed.forEach((choreId) => {
+        state.carryovers[kid.id][choreId] = { from: period, at: new Date().toISOString(), graceHours: state.graceHours };
+        delete reviews[choreId];
+      });
+
+      logAction(`${kid.name}'s ${period} period closed. ${missed.length} chore${missed.length === 1 ? "" : "s"} rolled over with ${state.graceHours}h grace.`);
+      setMessage(`${missed.length} ${period} chore${missed.length === 1 ? "" : "s"} rolled over for ${kid.name}.`);
+    }
+
+    function renderAuditLog() {
+      auditList.innerHTML = state.auditLog.length
+        ? state.auditLog.map((item) => `
+          <div class="audit-row">
+            <strong>${new Date(item.at).toLocaleString()}</strong><br>
+            ${escapeHtml(item.text)}
+          </div>
+        `).join("")
+        : "<p class=\"muted\">No activity yet.</p>";
+    }
+
+    function exportState() {
+      const payload = JSON.stringify(normalizeState(state), null, 2);
+      const blob = new Blob([payload], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `kid-chore-board-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      logAction("State exported as JSON.");
+      saveState();
+      render();
+    }
+
+    function importState(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          state = normalizeState({ ...defaultState, ...imported });
+          logAction("State imported from JSON.");
+          saveState();
+          setMessage("State imported.");
+          render();
+        } catch {
+          setMessage("That import file was not valid JSON.", "error");
+        }
+      });
+      reader.readAsText(file);
+    }
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       syncRewardSettings();
-      addKid(kidNameInput.value, kidAgeInput.value);
+      addKid(kidNameInput.value, kidAgeInput.value, kidPinInput.value);
     });
 
     demoButton.addEventListener("click", () => {
@@ -822,25 +1150,39 @@
         rewardGoal: 25,
         prize: "Ice cream",
         kids: [
-          { id: "sawyer-demo", name: "Sawyer", age: 7, rangeKey: "6-8" },
-          { id: "emmett-demo", name: "Emmett", age: 9, rangeKey: "9-10" },
-          { id: "landon-demo", name: "Landon", age: 15, rangeKey: "13-15" }
+          { id: "sawyer-demo", name: "Sawyer", age: 7, rangeKey: "6-8", pin: "1234" },
+          { id: "emmett-demo", name: "Emmett", age: 9, rangeKey: "9-10", pin: "1234" },
+          { id: "landon-demo", name: "Landon", age: 15, rangeKey: "13-15", pin: "1234" }
         ],
         selectedKidId: "sawyer-demo",
         activePeriod: "daily",
         assignments: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} },
-        completions: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} }
+        reviews: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} },
+        approvals: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} },
+        redemptions: { "sawyer-demo": [], "emmett-demo": [], "landon-demo": [] },
+        customChores: {
+          "sawyer-demo": { daily: [], weekly: [], monthly: [] },
+          "emmett-demo": { daily: [], weekly: [], monthly: [] },
+          "landon-demo": { daily: [], weekly: [], monthly: [] }
+        },
+        pointOverrides: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} },
+        carryovers: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} },
+        auditLog: []
       };
+      logAction("Demo family loaded.");
       setMessage("Demo family loaded.");
       saveState();
       render();
     });
 
     clearProgressButton.addEventListener("click", () => {
-      state.completions = {};
+      state.reviews = {};
+      state.approvals = {};
       state.kids.forEach((kid) => {
-        state.completions[kid.id] = {};
+        state.reviews[kid.id] = {};
+        state.approvals[kid.id] = {};
       });
+      logAction("All review and approval points were cleared.");
       setMessage("Points cleared.");
       saveState();
       render();
@@ -868,18 +1210,98 @@
 
       const kidId = button.dataset.kidId;
       const choreId = button.dataset.choreId;
+      const kid = state.kids.find((item) => item.id === kidId);
+      if (!kid) return;
+
+      if (["toggle-assign", "submit-review", "redeem"].includes(action) && !verifyKidPin(kid)) {
+        setMessage("PIN did not match.", "error");
+        return;
+      }
+
       state.assignments[kidId] = state.assignments[kidId] || {};
-      state.completions[kidId] = state.completions[kidId] || {};
+      state.reviews[kidId] = state.reviews[kidId] || {};
+      state.approvals[kidId] = state.approvals[kidId] || {};
+      state.redemptions[kidId] = state.redemptions[kidId] || [];
+      state.customChores[kidId] = state.customChores[kidId] || { daily: [], weekly: [], monthly: [] };
+      state.pointOverrides[kidId] = state.pointOverrides[kidId] || {};
+      state.carryovers[kidId] = state.carryovers[kidId] || {};
 
       if (action === "toggle-assign") {
         state.assignments[kidId][choreId] = !state.assignments[kidId][choreId];
-        if (!state.assignments[kidId][choreId]) delete state.completions[kidId][choreId];
+        if (!state.assignments[kidId][choreId]) {
+          delete state.reviews[kidId][choreId];
+          delete state.approvals[kidId][choreId];
+          delete state.carryovers[kidId][choreId];
+          logAction(`${kid.name} unassigned ${choreId}.`);
+        } else {
+          logAction(`${kid.name} assigned ${choreId}.`);
+        }
       }
 
-      if (action === "toggle-complete" && state.assignments[kidId][choreId]) {
-        state.completions[kidId][choreId] = !state.completions[kidId][choreId];
+      if (action === "submit-review" && state.assignments[kidId][choreId] && !state.approvals[kidId][choreId]) {
+        state.reviews[kidId][choreId] = !state.reviews[kidId][choreId];
+        logAction(`${kid.name} marked ${choreId} ${state.reviews[kidId][choreId] ? "done for review" : "not ready for review"}.`);
       }
 
+      if (action === "approve" && state.reviews[kidId][choreId]) {
+        state.approvals[kidId][choreId] = true;
+        delete state.carryovers[kidId][choreId];
+        logAction(`Adult approved ${choreId} for ${kid.name}.`);
+      }
+
+      if (action === "redeem") {
+        const stats = getStats(kid);
+        if (stats.points >= state.rewardGoal) {
+          const remaining = stats.points - state.rewardGoal;
+          state.redemptions[kidId].unshift({ at: new Date().toISOString(), prize: state.prize, points: state.rewardGoal, remaining });
+          logAction(`${kid.name} cashed in ${state.rewardGoal} points for ${state.prize}. ${remaining} points remain.`);
+          setMessage(`${kid.name} cashed in for ${state.prize}.`);
+        }
+      }
+
+      if (action === "add-custom") {
+        const nameInput = kidBoard.querySelector("#custom-chore-name");
+        const pointsInput = kidBoard.querySelector("#custom-chore-points");
+        const name = nameInput.value.trim();
+        const points = Number(pointsInput.value || sections.find((section) => section.key === button.dataset.period)?.points || 1);
+        if (!name) {
+          setMessage("Add a custom chore name first.", "error");
+          return;
+        }
+        const custom = { id: `custom:${kidId}:${Date.now().toString(36)}`, name, custom: true };
+        state.customChores[kidId][button.dataset.period].push(custom);
+        state.pointOverrides[kidId][custom.id] = Number.isInteger(points) && points > 0 ? points : 1;
+        logAction(`Custom chore added for ${kid.name}: ${name}.`);
+      }
+
+      if (action === "remove-custom") {
+        const period = button.dataset.period;
+        state.customChores[kidId][period] = state.customChores[kidId][period].filter((chore) => chore.id !== choreId);
+        delete state.assignments[kidId][choreId];
+        delete state.reviews[kidId][choreId];
+        delete state.approvals[kidId][choreId];
+        delete state.pointOverrides[kidId][choreId];
+        delete state.carryovers[kidId][choreId];
+        logAction(`Custom chore removed for ${kid.name}: ${choreId}.`);
+      }
+
+      if (action === "close-period") {
+        closePeriod(kid, button.dataset.period);
+      }
+
+      saveState();
+      render();
+    });
+
+    kidBoard.addEventListener("change", (event) => {
+      const input = event.target.closest("[data-action='point-change']");
+      if (!input) return;
+      const kid = state.kids.find((item) => item.id === input.dataset.kidId);
+      if (!kid) return;
+      const points = Number(input.value);
+      state.pointOverrides[kid.id] = state.pointOverrides[kid.id] || {};
+      state.pointOverrides[kid.id][input.dataset.choreId] = Number.isInteger(points) && points > 0 ? points : 1;
+      logAction(`${kid.name}'s ${input.dataset.choreId} points changed to ${state.pointOverrides[kid.id][input.dataset.choreId]}.`);
       saveState();
       render();
     });
@@ -894,6 +1316,32 @@
       syncRewardSettings();
       saveState();
       render();
+    });
+
+    graceHoursInput.addEventListener("change", () => {
+      syncRewardSettings();
+      saveState();
+      render();
+    });
+
+    auditButton.addEventListener("click", () => {
+      renderAuditLog();
+      auditDialog.showModal();
+    });
+
+    closeAuditButton.addEventListener("click", () => {
+      auditDialog.close();
+    });
+
+    exportButton.addEventListener("click", exportState);
+
+    importButton.addEventListener("click", () => {
+      importFile.click();
+    });
+
+    importFile.addEventListener("change", () => {
+      importState(importFile.files[0]);
+      importFile.value = "";
     });
 
     render();
