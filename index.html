@@ -11,18 +11,19 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #fff8e8;
+      --bg: #f7fbf8;
       --panel: #ffffff;
-      --ink: #233142;
-      --muted: #65758b;
+      --ink: #21313c;
+      --muted: #61717c;
       --primary: #19a7ce;
       --primary-dark: #107a98;
       --accent: #ff8f5f;
       --sun: #ffd166;
       --mint: #8bdcbe;
-      --line: #e7edf3;
-      --danger: #bf3951;
-      --shadow: 0 18px 42px rgba(35, 49, 66, 0.14);
+      --line: #dfe8ec;
+      --danger: #b9364b;
+      --done: #277243;
+      --shadow: 0 18px 42px rgba(33, 49, 60, 0.14);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -34,8 +35,8 @@
       margin: 0;
       min-height: 100vh;
       background:
-        radial-gradient(circle at 18% 12%, rgba(255, 209, 102, 0.55), transparent 28%),
-        linear-gradient(160deg, #fff8e8 0%, #e8fbff 52%, #f3fff8 100%);
+        radial-gradient(circle at 14% 8%, rgba(255, 209, 102, 0.42), transparent 30%),
+        linear-gradient(155deg, #fff8e8 0%, #eafaff 50%, #f1fff6 100%);
       color: var(--ink);
     }
 
@@ -44,124 +45,8 @@
       font: inherit;
     }
 
-    .app {
-      width: min(100%, 980px);
-      margin: 0 auto;
-      padding: 24px 18px 40px;
-    }
-
-    .hero {
-      display: grid;
-      gap: 18px;
-      padding: 22px 0 12px;
-    }
-
-    .badge {
-      display: inline-flex;
-      width: max-content;
-      align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 8px 12px;
-      background: rgba(255, 255, 255, 0.72);
-      color: var(--primary-dark);
-      font-size: 0.9rem;
-      font-weight: 800;
-      box-shadow: 0 8px 22px rgba(16, 122, 152, 0.1);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2.55rem, 12vw, 5.2rem);
-      line-height: 0.95;
-      letter-spacing: 0;
-    }
-
-    .intro {
-      margin: 0;
-      max-width: 58ch;
-      color: var(--muted);
-      font-size: 1.08rem;
-      line-height: 1.55;
-    }
-
-    .planner {
-      display: grid;
-      gap: 18px;
-    }
-
-    .control-panel,
-    .result-card,
-    .empty-state {
-      border: 1px solid rgba(231, 237, 243, 0.86);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.9);
-      box-shadow: var(--shadow);
-    }
-
-    .control-panel {
-      display: grid;
-      gap: 18px;
-      padding: 18px;
-    }
-
-    .input-row {
-      display: grid;
-      gap: 12px;
-    }
-
-    .assignment-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-
-    label {
-      color: var(--ink);
-      font-weight: 900;
-      font-size: 1rem;
-    }
-
-    .age-entry {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
-
-    input {
-      width: 100%;
-      min-height: 56px;
-      border: 2px solid #d8e8ef;
-      border-radius: 8px;
-      padding: 0 16px;
-      background: #ffffff;
-      color: var(--ink);
-      font-size: 1.15rem;
-      font-weight: 800;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(25, 167, 206, 0.18);
-    }
-
-    .button-row,
-    .range-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .button-row {
-      grid-template-columns: 1fr;
-    }
-
-    .range-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     button {
-      min-height: 50px;
+      min-height: 46px;
       border: 0;
       border-radius: 8px;
       padding: 0 14px;
@@ -175,15 +60,124 @@
       transform: translateY(-1px);
     }
 
-    button:focus-visible {
-      outline: 4px solid rgba(25, 167, 206, 0.25);
+    button:focus-visible,
+    input:focus {
+      outline: 4px solid rgba(25, 167, 206, 0.22);
       outline-offset: 2px;
+    }
+
+    input {
+      width: 100%;
+      min-height: 52px;
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 0 14px;
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    label {
+      color: var(--ink);
+      font-size: 0.95rem;
+      font-weight: 900;
+    }
+
+    .app {
+      width: min(100%, 1060px);
+      margin: 0 auto;
+      padding: 20px 16px 88px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 10px;
+      padding: 18px 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      width: max-content;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--primary-dark);
+      font-size: 0.82rem;
+      font-weight: 900;
+      box-shadow: 0 8px 22px rgba(16, 122, 152, 0.1);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.35rem, 11vw, 4.8rem);
+      line-height: 0.96;
+      letter-spacing: 0;
+    }
+
+    .intro,
+    .help-text,
+    .message,
+    .muted {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .intro {
+      max-width: 58ch;
+      font-size: 1.02rem;
+    }
+
+    .layout {
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel,
+    .kid-card,
+    .board,
+    .leaderboard,
+    .empty-state {
+      border: 1px solid rgba(223, 232, 236, 0.92);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .field-grid,
+    .action-row,
+    .kid-grid,
+    .board-grid,
+    .leader-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .action-row {
+      grid-template-columns: 1fr;
     }
 
     .primary {
       background: var(--primary);
       color: #ffffff;
-      box-shadow: 0 10px 20px rgba(25, 167, 206, 0.25);
+      box-shadow: 0 10px 22px rgba(25, 167, 206, 0.25);
     }
 
     .secondary {
@@ -191,131 +185,197 @@
     }
 
     .ghost {
-      border: 1px solid #dbe7ef;
+      border: 1px solid var(--line);
       background: #ffffff;
       color: var(--muted);
     }
 
-    .range-button {
-      border: 1px solid #dbe7ef;
-      background: #f7fbfd;
-    }
-
-    .range-button.active {
-      border-color: var(--primary);
-      background: #dff7ff;
-      color: var(--primary-dark);
-      box-shadow: inset 0 0 0 2px rgba(25, 167, 206, 0.18);
-    }
-
-    .help-text,
     .message {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.45;
-    }
-
-    .message {
-      min-height: 1.4em;
-      font-weight: 800;
+      min-height: 1.3em;
+      font-weight: 900;
     }
 
     .message.error {
       color: var(--danger);
     }
 
-    .results {
+    .dashboard {
       display: grid;
       gap: 14px;
     }
 
-    .results.hidden,
-    .empty-state.hidden {
-      display: none;
-    }
-
-    .results-header,
-    .empty-state {
-      padding: 18px;
-    }
-
-    .results-header {
-      display: grid;
+    .section-header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
       gap: 12px;
     }
 
-    .results-header h2 {
-      margin: 0;
-      font-size: clamp(1.7rem, 8vw, 3rem);
-      line-height: 1.02;
+    .section-header h2 {
+      font-size: 1.35rem;
+      line-height: 1.1;
     }
 
-    .results-header p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    .reward-panel {
+    .kid-card {
       display: grid;
-      gap: 10px;
-      border: 1px solid #dbe7ef;
-      border-radius: 8px;
+      gap: 12px;
       padding: 14px;
-      background: #ffffff;
+      text-align: left;
     }
 
-    .reward-topline {
+    .kid-card.active {
+      border-color: var(--primary);
+      box-shadow: inset 0 0 0 2px rgba(25, 167, 206, 0.18), var(--shadow);
+    }
+
+    .kid-card-top {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: 8px;
-      font-weight: 900;
+      gap: 10px;
     }
 
-    .points-total {
+    .kid-name {
+      font-size: 1.35rem;
+      font-weight: 950;
+    }
+
+    .pill {
+      display: inline-flex;
+      width: max-content;
+      align-items: center;
       border-radius: 999px;
-      padding: 7px 10px;
-      background: var(--mint);
-      color: #163d32;
+      padding: 6px 9px;
+      background: #eaf7fb;
+      color: var(--primary-dark);
+      font-size: 0.82rem;
+      font-weight: 900;
     }
 
     .progress-track {
       overflow: hidden;
       height: 12px;
       border-radius: 999px;
-      background: #e9f1f6;
+      background: #e9f1f4;
     }
 
     .progress-fill {
-      width: 0%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--primary), var(--accent));
       transition: width 220ms ease;
     }
 
-    .reward-copy {
-      margin: 0;
+    .board {
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+      animation: reveal 260ms ease both;
+    }
+
+    .board-head {
+      display: grid;
+      gap: 8px;
+    }
+
+    .board-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .board-title-row h2 {
+      font-size: clamp(1.6rem, 7vw, 2.7rem);
+      line-height: 1;
+    }
+
+    .tab-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: #ffffff;
       color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.4;
+      min-height: 44px;
+    }
+
+    .tab.active {
+      border-color: var(--primary);
+      background: #dff7ff;
+      color: var(--primary-dark);
+    }
+
+    .chore-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .chore-item {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    .chore-item.done {
+      background: #f3fbf5;
+      border-color: #cae9d2;
+    }
+
+    .chore-main {
+      display: grid;
+      gap: 6px;
+    }
+
+    .chore-name {
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .chore-item.done .chore-name {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .chore-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .assign {
+      background: #eaf7fb;
+      color: var(--primary-dark);
+    }
+
+    .complete {
+      background: #edf9ee;
+      color: var(--done);
+    }
+
+    .complete[disabled] {
+      cursor: not-allowed;
+      opacity: 0.48;
+      transform: none;
+    }
+
+    .remove {
+      background: #fff0e8;
+      color: #934326;
     }
 
     .leaderboard {
       display: grid;
-      gap: 8px;
-      border: 1px solid #dbe7ef;
-      border-radius: 8px;
+      gap: 10px;
       padding: 14px;
-      background: #ffffff;
-    }
-
-    .leaderboard h3 {
-      margin: 0;
-      font-size: 1.1rem;
     }
 
     .leader-row {
@@ -323,270 +383,25 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      border-top: 1px solid #edf2f6;
-      padding-top: 8px;
+      border-top: 1px solid #edf2f4;
+      padding-top: 10px;
       font-weight: 900;
-    }
-
-    .status-dot {
-      display: inline-flex;
-      border-radius: 999px;
-      padding: 5px 8px;
-      background: #eef2f6;
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 900;
-    }
-
-    .status-dot.assigned {
-      background: #dff7ff;
-      color: var(--primary-dark);
-    }
-
-    .status-dot.complete {
-      background: #edf9ee;
-      color: #246239;
-    }
-
-    .card-grid {
-      display: grid;
-      gap: 14px;
-    }
-
-    .child-board {
-      display: grid;
-      gap: 14px;
-      border: 1px solid rgba(231, 237, 243, 0.86);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.72);
-      padding: 14px;
-    }
-
-    .child-board-title {
-      margin: 0;
-      font-size: 1.35rem;
-      line-height: 1.1;
-    }
-
-    .kid-board-header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .kid-board-header .child-board-title {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .kid-age-pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 6px 9px;
-      background: #dff7ff;
-      color: var(--primary-dark);
-      font-size: 0.85rem;
-      font-weight: 900;
-    }
-
-    .kid-note {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.45;
-    }
-
-    .chore-card-grid {
-      display: grid;
-      gap: 14px;
-    }
-
-    .chooser-grid {
-      display: grid;
-      gap: 14px;
-    }
-
-    .assignment-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .assign-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      border: 1px solid #dbe7ef;
-      border-radius: 999px;
-      padding: 7px 9px;
-      background: #ffffff;
-      font-size: 0.88rem;
-      font-weight: 900;
-    }
-
-    .assign-toggle input {
-      width: 18px;
-      min-height: 18px;
-      accent-color: var(--primary);
-    }
-
-    .assigned-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .assigned-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 6px 8px;
-      background: #f7fbfd;
-      font-size: 0.88rem;
-      font-weight: 900;
-    }
-
-    .result-card {
-      overflow: hidden;
-      animation: reveal 360ms ease both;
-    }
-
-    .result-card:nth-child(2) {
-      animation-delay: 80ms;
-    }
-
-    .result-card:nth-child(3) {
-      animation-delay: 160ms;
-    }
-
-    .card-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0;
-      padding: 16px 16px 10px;
-      font-size: 1.18rem;
-    }
-
-    .icon {
-      display: inline-grid;
-      width: 36px;
-      height: 36px;
-      place-items: center;
-      border-radius: 8px;
-      background: #e8fbff;
-      font-size: 1.2rem;
-    }
-
-    ul {
-      display: grid;
-      gap: 10px;
-      margin: 0;
-      padding: 0 16px 18px;
-      list-style: none;
-    }
-
-    li {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      align-items: flex-start;
-      gap: 10px;
-      min-height: 32px;
-      color: #314257;
-      font-size: 1.02rem;
-      line-height: 1.35;
-    }
-
-    li::before {
-      content: "";
-      flex: 0 0 auto;
-      width: 10px;
-      height: 10px;
-      margin-top: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 0 4px rgba(255, 143, 95, 0.16);
-    }
-
-    li.completed {
-      color: var(--muted);
-    }
-
-    li.completed .chore-text {
-      text-decoration: line-through;
-    }
-
-    .chore-row {
-      display: grid;
-      gap: 8px;
-    }
-
-    .chore-meta {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .point-pill {
-      border-radius: 999px;
-      padding: 5px 8px;
-      background: #fff3ce;
-      color: #765400;
-      font-size: 0.82rem;
-      font-weight: 900;
-    }
-
-    .chore-action {
-      min-height: 34px;
-      padding: 0 10px;
-      background: #edf9ee;
-      color: #246239;
-      font-size: 0.88rem;
-    }
-
-    li.completed .chore-action {
-      background: #eef2f6;
-      color: var(--muted);
-    }
-
-    .assign-action {
-      background: #dff7ff;
-      color: var(--primary-dark);
-    }
-
-    .unassign-action {
-      background: #fff0e8;
-      color: #934326;
     }
 
     .empty-state {
       display: grid;
       gap: 8px;
-      text-align: left;
+      padding: 18px;
     }
 
-    .empty-state h2 {
-      margin: 0;
-      font-size: 1.45rem;
-    }
-
-    .empty-state p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.5;
+    .hidden {
+      display: none;
     }
 
     @keyframes reveal {
       from {
         opacity: 0;
-        transform: translateY(14px);
+        transform: translateY(12px);
       }
       to {
         opacity: 1;
@@ -594,117 +409,90 @@
       }
     }
 
-    @media (min-width: 680px) {
+    @media (min-width: 720px) {
       .app {
-        padding: 42px 28px 58px;
+        padding: 34px 24px 64px;
       }
 
-      .hero {
-        padding-top: 34px;
+      .field-grid {
+        grid-template-columns: 1.5fr 0.65fr 0.7fr 0.8fr;
+        align-items: end;
       }
 
-      .age-entry {
-        grid-template-columns: minmax(180px, 1fr) auto;
+      .action-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .kid-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .board-grid {
+        grid-template-columns: 1.45fr 0.8fr;
+        align-items: start;
+      }
+
+      .chore-item {
+        grid-template-columns: 1fr 220px;
         align-items: center;
       }
-
-      .assignment-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .button-row {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .range-grid {
-        grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
-      }
-
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .chore-card-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        align-items: start;
-      }
-
-      .chooser-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        align-items: start;
-      }
-
     }
   </style>
 </head>
 <body>
   <main class="app">
     <section class="hero" aria-labelledby="app-title">
-      <div class="badge">Ages 2-18</div>
+      <div class="badge">Up to 10 kids</div>
       <h1 id="app-title">Kid Chore Board</h1>
-      <p class="intro">Add each kid with their age, choose chores from the right list, and track status for everyone.</p>
+      <p class="intro">A mobile-first chore board for assigning age-right jobs, tracking completion, and working toward a family prize.</p>
     </section>
 
-    <section class="planner" aria-label="Chore planner">
-      <form class="control-panel" id="chore-form" novalidate>
-        <div class="input-row">
-          <label for="age-input">Child's age</label>
-          <div class="age-entry">
-            <input id="age-input" name="age" type="number" min="2" max="18" inputmode="numeric" placeholder="Enter age 2-18">
-            <button class="primary" type="submit">Show Chore List</button>
+    <section class="layout" aria-label="Family chore manager">
+      <form class="panel" id="setup-form" novalidate>
+        <div class="field-grid">
+          <div class="field">
+            <label for="kid-name">Kid name</label>
+            <input id="kid-name" maxlength="32" autocomplete="off" placeholder="Sawyer">
           </div>
-          <p class="message" id="message" role="status" aria-live="polite"></p>
-        </div>
-
-        <div class="assignment-grid">
-          <div class="input-row">
-            <label for="child-names">Kids and ages</label>
-            <input id="child-names" name="childNames" type="text" maxlength="320" placeholder="Sawyer 7, Emmett 9, Landon 15">
-            <p class="help-text">Use name + age for each kid. Supports up to 10 kids.</p>
+          <div class="field">
+            <label for="kid-age">Age</label>
+            <input id="kid-age" type="number" min="2" max="18" inputmode="numeric" placeholder="7">
           </div>
-          <div class="input-row">
-            <label for="reward-goal">Reward goal</label>
-            <input id="reward-goal" name="rewardGoal" type="number" min="1" max="200" inputmode="numeric" placeholder="25 points">
+          <div class="field">
+            <label for="reward-goal">Goal</label>
+            <input id="reward-goal" type="number" min="1" max="200" inputmode="numeric" placeholder="25">
           </div>
-          <div class="input-row">
+          <div class="field">
             <label for="prize-input">Prize</label>
-            <input id="prize-input" name="prize" type="text" maxlength="32" placeholder="Ice cream">
+            <input id="prize-input" maxlength="40" placeholder="Ice cream">
           </div>
         </div>
 
-        <div>
-          <p class="help-text">Or assign chores from an age range:</p>
-          <div class="range-grid" id="range-grid" aria-label="Age range shortcuts">
-            <button class="range-button" type="button" data-range="2-3">Ages 2-3</button>
-            <button class="range-button" type="button" data-range="4-5">Ages 4-5</button>
-            <button class="range-button" type="button" data-range="6-8">Ages 6-8</button>
-            <button class="range-button" type="button" data-range="9-10">Ages 9-10</button>
-            <button class="range-button" type="button" data-range="11-12">Ages 11-12</button>
-            <button class="range-button" type="button" data-range="13-15">Ages 13-15</button>
-            <button class="range-button" type="button" data-range="16-18">Ages 16-18</button>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button class="secondary" type="button" id="demo-button">Try Age 7</button>
-          <button class="ghost" type="button" id="reset-button">Reset</button>
+        <div class="action-row">
+          <button class="primary" type="submit">Add Kid</button>
+          <button class="secondary" type="button" id="demo-button">Load Demo Family</button>
           <button class="ghost" type="button" id="clear-progress-button">Clear Points</button>
         </div>
+
+        <p class="message" id="message" role="status" aria-live="polite"></p>
       </form>
 
-      <section class="empty-state" id="empty-state">
-        <h2>Ready when you are.</h2>
-        <p>Enter an age and kid names, then choose from the complete Daily, Weekly, and Monthly chore list.</p>
+      <section class="dashboard" aria-label="Kids dashboard">
+        <div class="section-header">
+          <h2>Kids</h2>
+          <span class="pill" id="kid-count">0/10</span>
+        </div>
+        <div class="kid-grid" id="kid-grid"></div>
       </section>
 
-      <section class="results hidden" id="results" aria-live="polite">
-        <div class="results-header">
-          <h2 id="results-title"></h2>
-          <p id="results-copy"></p>
-          <p id="assignment-summary"></p>
-          <div id="leaderboard"></div>
-        </div>
-        <div class="card-grid" id="card-grid"></div>
+      <section class="board-grid">
+        <section class="board hidden" id="kid-board" aria-live="polite"></section>
+        <section class="leaderboard" id="leaderboard" aria-label="Leaderboard"></section>
+      </section>
+
+      <section class="empty-state" id="empty-state">
+        <h2>Start with your first kid.</h2>
+        <p>Add a name and age, or load the demo family to see how assignment, completion, points, and rewards work.</p>
       </section>
     </section>
   </main>
@@ -768,53 +556,42 @@
       { key: "monthly", title: "Monthly", icon: "🧽", points: 5 }
     ];
 
-    const form = document.querySelector("#chore-form");
-    const ageInput = document.querySelector("#age-input");
-    const message = document.querySelector("#message");
-    const childNamesInput = document.querySelector("#child-names");
+    const form = document.querySelector("#setup-form");
+    const kidNameInput = document.querySelector("#kid-name");
+    const kidAgeInput = document.querySelector("#kid-age");
     const rewardGoalInput = document.querySelector("#reward-goal");
     const prizeInput = document.querySelector("#prize-input");
-    const results = document.querySelector("#results");
-    const emptyState = document.querySelector("#empty-state");
-    const resultsTitle = document.querySelector("#results-title");
-    const resultsCopy = document.querySelector("#results-copy");
-    const assignmentSummary = document.querySelector("#assignment-summary");
+    const message = document.querySelector("#message");
+    const kidCount = document.querySelector("#kid-count");
+    const kidGrid = document.querySelector("#kid-grid");
+    const kidBoard = document.querySelector("#kid-board");
     const leaderboard = document.querySelector("#leaderboard");
-    const cardGrid = document.querySelector("#card-grid");
-    const rangeGrid = document.querySelector("#range-grid");
+    const emptyState = document.querySelector("#empty-state");
     const demoButton = document.querySelector("#demo-button");
-    const resetButton = document.querySelector("#reset-button");
     const clearProgressButton = document.querySelector("#clear-progress-button");
-    const storageKey = "kid-chore-board-progress";
-    const assignmentStorageKey = "kid-chore-board-assignments";
     const maxKids = 10;
-    let currentBoards = [];
-    let currentMode = "kids";
-    let progressState = loadProgress();
-    let assignmentState = loadAssignments();
+    const stateKey = "kid-chore-board-state-v2";
+    const defaultState = {
+      kids: [],
+      selectedKidId: "",
+      activePeriod: "daily",
+      rewardGoal: 25,
+      prize: "Ice cream",
+      assignments: {},
+      completions: {}
+    };
+    let state = loadState();
 
-    function loadProgress() {
+    function loadState() {
       try {
-        return JSON.parse(localStorage.getItem(storageKey)) || {};
+        return { ...defaultState, ...JSON.parse(localStorage.getItem(stateKey)) };
       } catch {
-        return {};
+        return { ...defaultState };
       }
     }
 
-    function saveProgress() {
-      localStorage.setItem(storageKey, JSON.stringify(progressState));
-    }
-
-    function loadAssignments() {
-      try {
-        return JSON.parse(localStorage.getItem(assignmentStorageKey)) || {};
-      } catch {
-        return {};
-      }
-    }
-
-    function saveAssignments() {
-      localStorage.setItem(assignmentStorageKey, JSON.stringify(assignmentState));
+    function saveState() {
+      localStorage.setItem(stateKey, JSON.stringify(state));
     }
 
     function escapeHtml(value) {
@@ -843,373 +620,283 @@
       message.className = `message${type ? ` ${type}` : ""}`;
     }
 
-    function setActiveRange(rangeKey) {
-      document.querySelectorAll(".range-button").forEach((button) => {
-        button.classList.toggle("active", button.dataset.range === rangeKey);
-      });
+    function makeId(name) {
+      return `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${Date.now().toString(36)}`;
     }
 
-    function getRewardGoal() {
-      const goal = Number(rewardGoalInput.value.trim() || 25);
-      return Number.isInteger(goal) && goal > 0 ? goal : 25;
+    function getSelectedKid() {
+      return state.kids.find((kid) => kid.id === state.selectedKidId) || state.kids[0] || null;
     }
 
-    function getPrize() {
-      return prizeInput.value.trim() || "a prize";
+    function syncRewardSettings() {
+      const goal = Number(rewardGoalInput.value);
+      state.rewardGoal = Number.isInteger(goal) && goal > 0 ? goal : 25;
+      state.prize = prizeInput.value.trim() || "a prize";
     }
 
-    function getDefaultAge() {
-      const rawAge = ageInput.value.trim();
-      if (!rawAge) return null;
-      const age = Number(rawAge);
-      return Number.isInteger(age) ? age : NaN;
+    function getChoreId(kid, period, index) {
+      return `${kid.rangeKey}:${period}:${index}`;
     }
 
-    function getPlanKey(child) {
-      return `${child.name.toLowerCase()}::${child.rangeKey}`;
+    function getKidAssignments(kid) {
+      return state.assignments[kid.id] || {};
     }
 
-    function getChoreId(rangeKey, sectionKey, index) {
-      return `${rangeKey}-${sectionKey}-${index}`;
+    function getKidCompletions(kid) {
+      return state.completions[kid.id] || {};
     }
 
-    function isAssigned(child, choreId) {
-      return Boolean(assignmentState[getPlanKey(child)]?.[choreId]);
+    function getChorePoints(period) {
+      return sections.find((section) => section.key === period)?.points || 1;
     }
 
-    function isComplete(child, choreId) {
-      return Boolean(progressState[getPlanKey(child)]?.[choreId]);
+    function getStats(kid) {
+      const assignments = getKidAssignments(kid);
+      const completions = getKidCompletions(kid);
+      const assignedIds = Object.keys(assignments).filter((id) => assignments[id]);
+      const doneIds = assignedIds.filter((id) => completions[id]);
+      const points = doneIds.reduce((total, choreId) => total + getChorePoints(choreId.split(":")[1]), 0);
+      return { assigned: assignedIds.length, done: doneIds.length, points };
     }
 
-    function parseKids(defaultAge = null) {
-      const rawNames = childNamesInput.value.trim();
-      const pieces = rawNames
-        ? rawNames.split(/[,;\n]+/).map((piece) => piece.trim()).filter(Boolean)
-        : [];
+    function addKid(name, age) {
+      const trimmedName = name.trim();
+      const parsedAge = Number(age);
+      const rangeKey = getRangeForAge(parsedAge);
 
-      if (!pieces.length && Number.isInteger(defaultAge)) {
-        return { kids: [makeChild("Helper", defaultAge)], error: "" };
+      if (!trimmedName) {
+        setMessage("Add a kid name first.", "error");
+        return;
       }
 
-      if (!pieces.length) {
-        return { kids: [], error: "Add each kid with an age, like Sawyer 7, Emmett 9, Landon 15." };
+      if (state.kids.length >= maxKids) {
+        setMessage(`Kid Chore Board supports up to ${maxKids} kids.`, "error");
+        return;
       }
 
-      if (pieces.length > maxKids) {
-        return { kids: [], error: `Kid Chore Board supports up to ${maxKids} kids at a time.` };
+      if (!Number.isInteger(parsedAge) || !rangeKey) {
+        setMessage("Age needs to be a whole number from 2 through 18.", "error");
+        return;
       }
 
-      const kids = [];
-      const usedNames = new Set();
-
-      for (const piece of pieces) {
-        const ageMatch = piece.match(/\b(1[0-8]|[2-9])\b\s*$/);
-        const age = ageMatch ? Number(ageMatch[1]) : defaultAge;
-        const name = (ageMatch ? piece.slice(0, ageMatch.index) : piece).replace(/[:=-]+$/, "").trim();
-
-        if (!name) {
-          return { kids: [], error: "Each kid needs a name before the age." };
-        }
-
-        if (!Number.isInteger(age)) {
-          return { kids: [], error: `Add an age for ${name}, or enter one shared age above.` };
-        }
-
-        const child = makeChild(name, age);
-        if (!child) {
-          return { kids: [], error: `${name}'s age needs to be 2 through 18.` };
-        }
-
-        const key = child.name.toLowerCase();
-        if (!usedNames.has(key)) {
-          usedNames.add(key);
-          kids.push(child);
-          if (kids.length > maxKids) {
-            return { kids: [], error: `Kid Chore Board supports up to ${maxKids} kids at a time.` };
-          }
-        }
+      if (state.kids.some((kid) => kid.name.toLowerCase() === trimmedName.toLowerCase())) {
+        setMessage(`${trimmedName} is already on the board.`, "error");
+        return;
       }
 
-      return { kids, error: "" };
+      const kid = { id: makeId(trimmedName), name: trimmedName, age: parsedAge, rangeKey };
+      state.kids.push(kid);
+      state.selectedKidId = kid.id;
+      state.assignments[kid.id] = {};
+      state.completions[kid.id] = {};
+      kidNameInput.value = "";
+      kidAgeInput.value = "";
+      setMessage(`${kid.name} added.`);
+      saveState();
+      render();
     }
 
-    function makeChild(name, age) {
-      const rangeKey = getRangeForAge(age);
-      return rangeKey ? { name, age, rangeKey } : null;
+    function render() {
+      rewardGoalInput.value = state.rewardGoal;
+      prizeInput.value = state.prize;
+      kidCount.textContent = `${state.kids.length}/${maxKids}`;
+      renderKids();
+      renderBoard();
+      renderLeaderboard();
+      emptyState.classList.toggle("hidden", state.kids.length > 0);
     }
 
-    function getRangeModeKids(rangeKey) {
-      const names = childNamesInput.value
-        .split(/[,;\n]+/)
-        .map((name) => name.replace(/\b(1[0-8]|[2-9])\b\s*$/, "").replace(/[:=-]+$/, "").trim())
-        .filter(Boolean);
-      const uniqueNames = [...new Set(names.length ? names : ["Helper"])].slice(0, maxKids);
-      const sampleAge = Number(rangeKey.split("-")[0]);
-      return uniqueNames.map((name) => ({ name, age: sampleAge, rangeKey }));
-    }
+    function renderKids() {
+      if (!state.kids.length) {
+        kidGrid.innerHTML = "";
+        return;
+      }
 
-    function renderBoards(kids, mode = "kids") {
-      currentBoards = kids;
-      currentMode = mode;
-      setActiveRange(mode === "range" && kids[0] ? kids[0].rangeKey : null);
-      setMessage();
-
-      const kidCount = kids.length;
-      resultsTitle.textContent = kidCount === 1 ? `${kids[0].name}'s chore board` : `Chore boards for ${kidCount} kids`;
-      resultsCopy.textContent = kids.map((child) => `${child.name}: age ${child.age} (${chorePlans[child.rangeKey].label})`).join(" • ");
-      assignmentSummary.textContent = "Each kid now has their own age-appropriate Daily, Weekly, and Monthly chore list.";
-      leaderboard.innerHTML = getLeaderboardMarkup(kids);
-      cardGrid.innerHTML = `
-        ${kids.map((child) => getChildBoardMarkup(child)).join("")}
-        <section class="child-board" aria-label="Reward progress by child">
-          <h3 class="child-board-title">Reward progress</h3>
-          <div class="chore-card-grid">
-            ${kids.map((child) => getChildProgressMarkup(child)).join("")}
-          </div>
-        </section>
-      `;
-
-      emptyState.classList.add("hidden");
-      results.classList.remove("hidden");
-      results.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    function getChildBoardMarkup(child) {
-      const plan = chorePlans[child.rangeKey];
-      return `
-        <section class="child-board" aria-label="${escapeHtml(child.name)} chore list">
-          <div class="kid-board-header">
-            <h3 class="child-board-title">
-              ${escapeHtml(child.name)}
-              <span class="kid-age-pill">Age ${child.age}</span>
-              <span class="kid-age-pill">${plan.label}</span>
-            </h3>
-          </div>
-          <p class="kid-note">${plan.note}</p>
-          <div class="chooser-grid">
-            ${sections.map((section) => getChooserCardMarkup(section, child)).join("")}
-          </div>
-        </section>
-      `;
-    }
-
-    function getChooserCardMarkup(section, child) {
-      const plan = chorePlans[child.rangeKey];
-      const items = plan[section.key].map((item, index) => {
-        const choreId = getChoreId(child.rangeKey, section.key, index);
-        const assigned = isAssigned(child, choreId);
-        const complete = isComplete(child, choreId);
+      kidGrid.innerHTML = state.kids.map((kid) => {
+        const stats = getStats(kid);
+        const percent = Math.min(100, Math.round((stats.points / state.rewardGoal) * 100));
+        const plan = chorePlans[kid.rangeKey];
         return `
-          <li class="${complete ? "completed" : ""}">
-            <div class="chore-row">
-              <span class="chore-text">${escapeHtml(item)}</span>
-              <span class="chore-meta">
-                <span class="point-pill">${section.points} point${section.points === 1 ? "" : "s"}</span>
+          <button class="kid-card ${kid.id === state.selectedKidId ? "active" : ""}" type="button" data-action="select-kid" data-kid-id="${kid.id}">
+            <span class="kid-card-top">
+              <span>
+                <span class="kid-name">${escapeHtml(kid.name)}</span>
+                <span class="muted">Age ${kid.age} · ${plan.label}</span>
               </span>
-              <div class="assignment-options" aria-label="Assign ${escapeHtml(item)} to ${escapeHtml(child.name)}">
-                <label class="assign-toggle">
-                  <input type="checkbox" data-action="toggle-assign" data-plan-key="${encodeURIComponent(getPlanKey(child))}" data-chore-id="${choreId}" ${assigned ? "checked" : ""}>
-                  Assign to ${escapeHtml(child.name)}
-                </label>
-              </div>
-              <div class="assigned-list">
-                ${assigned ? getAssignedPillMarkup(child, choreId) : "<span class=\"help-text\">Not assigned yet</span>"}
-                <span class="status-dot ${complete ? "complete" : assigned ? "assigned" : ""}">${complete ? "Done" : assigned ? "Assigned" : "Open"}</span>
-              </div>
-            </div>
-          </li>
+              <span class="pill">${stats.points}/${state.rewardGoal}</span>
+            </span>
+            <span class="progress-track" aria-hidden="true"><span class="progress-fill" style="width: ${percent}%"></span></span>
+            <span class="muted">${stats.done} of ${stats.assigned} assigned chores complete</span>
+          </button>
         `;
       }).join("");
-      return `
-        <article class="result-card">
-          <h3 class="card-title"><span class="icon" aria-hidden="true">${section.icon}</span>${section.title}</h3>
-          <ul>${items}</ul>
-        </article>
-      `;
     }
 
-    function getAssignedPillMarkup(child, choreId) {
-      const complete = isComplete(child, choreId);
-      return `
-        <span class="assigned-pill ${complete ? "completed" : ""}">
-          ${escapeHtml(child.name)}
-          <button class="chore-action" type="button" data-action="complete" data-plan-key="${encodeURIComponent(getPlanKey(child))}" data-chore-id="${choreId}">
-            ${complete ? "Undo" : "Complete"}
-          </button>
-        </span>
-      `;
-    }
+    function renderBoard() {
+      const kid = getSelectedKid();
+      if (!kid) {
+        kidBoard.classList.add("hidden");
+        kidBoard.innerHTML = "";
+        return;
+      }
 
-    function getChildProgressMarkup(child) {
-      return `
-        <article class="result-card">
-          <h3 class="card-title">${escapeHtml(child.name)}</h3>
-          ${getRewardMarkup(child)}
-        </article>
-      `;
-    }
+      state.selectedKidId = kid.id;
+      const plan = chorePlans[kid.rangeKey];
+      const activeSection = sections.find((section) => section.key === state.activePeriod) || sections[0];
+      const chores = plan[activeSection.key];
+      const stats = getStats(kid);
 
-    function getRewardMarkup(child) {
-      const earned = getEarnedPoints(child);
-      const goal = getRewardGoal();
-      const percent = Math.min(100, Math.round((earned / goal) * 100));
-      const rewardText = earned >= goal
-        ? `${escapeHtml(getPrize())} earned. Nice work.`
-        : `${goal - earned} point${goal - earned === 1 ? "" : "s"} to ${escapeHtml(getPrize())}.`;
-      return `
-        <div class="reward-panel" aria-label="${escapeHtml(child.name)}'s reward progress">
-          <div class="reward-topline">
-            <span>${escapeHtml(child.name)}'s progress</span>
-            <span class="points-total">${earned}/${goal} points</span>
+      kidBoard.classList.remove("hidden");
+      kidBoard.innerHTML = `
+        <div class="board-head">
+          <div class="board-title-row">
+            <h2>${escapeHtml(kid.name)}</h2>
+            <span class="pill">Age ${kid.age}</span>
           </div>
-          <div class="progress-track" aria-hidden="true">
-            <div class="progress-fill" style="width: ${percent}%"></div>
-          </div>
-          <p class="reward-copy">${rewardText}</p>
+          <p class="muted">${plan.note}</p>
+          <p class="muted">${stats.done} done · ${stats.assigned} assigned · ${stats.points} points</p>
+        </div>
+        <div class="tab-row" role="tablist" aria-label="Chore frequency">
+          ${sections.map((section) => `
+            <button class="tab ${section.key === activeSection.key ? "active" : ""}" type="button" data-action="set-period" data-period="${section.key}">
+              ${section.title}
+            </button>
+          `).join("")}
+        </div>
+        <div class="chore-list">
+          ${chores.map((chore, index) => getChoreMarkup(kid, activeSection, chore, index)).join("")}
         </div>
       `;
     }
 
-    function getEarnedPoints(child) {
-      const completed = progressState[getPlanKey(child)] || {};
-      const plan = chorePlans[child.rangeKey];
-      return sections.reduce((total, section) => (
-        total + plan[section.key].reduce((sum, _item, index) => {
-          const choreId = getChoreId(child.rangeKey, section.key, index);
-          return completed[choreId] && isAssigned(child, choreId) ? sum + section.points : sum;
-        }, 0)
-      ), 0);
-    }
-
-    function getLeaderboardMarkup(kids) {
-      const goal = getRewardGoal();
-      const leaders = kids
-        .map((child) => ({ child, points: getEarnedPoints(child) }))
-        .sort((a, b) => b.points - a.points || a.child.name.localeCompare(b.child.name));
+    function getChoreMarkup(kid, section, chore, index) {
+      const choreId = getChoreId(kid, section.key, index);
+      const assigned = Boolean(getKidAssignments(kid)[choreId]);
+      const done = Boolean(getKidCompletions(kid)[choreId]);
       return `
-        <section class="leaderboard" aria-label="Leaderboard">
-          <h3>Leaderboard for ${escapeHtml(getPrize())}</h3>
-          ${leaders.map((leader, index) => `
-            <div class="leader-row">
-              <span>${index + 1}. ${escapeHtml(leader.child.name)}</span>
-              <span>${leader.points}/${goal}</span>
-            </div>
-          `).join("")}
-        </section>
+        <article class="chore-item ${done ? "done" : ""}">
+          <div class="chore-main">
+            <span class="chore-name">${escapeHtml(chore)}</span>
+            <span class="muted">${section.points} point${section.points === 1 ? "" : "s"} · ${assigned ? done ? "Complete" : "Assigned" : "Not assigned"}</span>
+          </div>
+          <div class="chore-actions">
+            <button class="${assigned ? "remove" : "assign"}" type="button" data-action="toggle-assign" data-kid-id="${kid.id}" data-chore-id="${choreId}">
+              ${assigned ? "Unassign" : "Assign"}
+            </button>
+            <button class="complete" type="button" data-action="toggle-complete" data-kid-id="${kid.id}" data-chore-id="${choreId}" ${assigned ? "" : "disabled"}>
+              ${done ? "Undo" : "Complete"}
+            </button>
+          </div>
+        </article>
       `;
     }
 
-    function handleAgeSubmit(event) {
-      event.preventDefault();
-      const defaultAge = getDefaultAge();
+    function renderLeaderboard() {
+      const leaders = [...state.kids]
+        .map((kid) => ({ kid, stats: getStats(kid) }))
+        .sort((a, b) => b.stats.points - a.stats.points || a.kid.name.localeCompare(b.kid.name));
 
-      if (Number.isNaN(defaultAge)) {
-        setMessage("Please enter a whole number from 2 to 18.", "error");
-        return;
-      }
-
-      if (Number.isInteger(defaultAge) && !getRangeForAge(defaultAge)) {
-        setMessage("Kid Chore Board works best for ages 2 through 18.", "error");
-        return;
-      }
-
-      const parsed = parseKids(defaultAge);
-      if (parsed.error) {
-        setMessage(parsed.error, "error");
-        return;
-      }
-
-      renderBoards(parsed.kids);
+      leaderboard.innerHTML = `
+        <h2>Leaderboard</h2>
+        <p class="muted">Prize: ${escapeHtml(state.prize || "a prize")}</p>
+        <div class="leader-list">
+          ${leaders.length ? leaders.map((leader, index) => `
+            <div class="leader-row">
+              <span>${index + 1}. ${escapeHtml(leader.kid.name)}</span>
+              <span>${leader.stats.points}/${state.rewardGoal}</span>
+            </div>
+          `).join("") : "<p class=\"muted\">Add kids to start tracking points.</p>"}
+        </div>
+      `;
     }
 
-    form.addEventListener("submit", handleAgeSubmit);
-
-    rangeGrid.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-range]");
-      if (!button) return;
-      ageInput.value = "";
-      renderBoards(getRangeModeKids(button.dataset.range), "range");
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      syncRewardSettings();
+      addKid(kidNameInput.value, kidAgeInput.value);
     });
 
     demoButton.addEventListener("click", () => {
-      ageInput.value = "";
-      childNamesInput.value = "Sawyer 7, Emmett 9, Landon 15";
-      if (!rewardGoalInput.value.trim()) rewardGoalInput.value = "25";
-      if (!prizeInput.value.trim()) prizeInput.value = "Ice cream";
-      renderBoards(parseKids().kids);
-    });
-
-    resetButton.addEventListener("click", () => {
-      ageInput.value = "";
-      setMessage();
-      setActiveRange(null);
-      results.classList.add("hidden");
-      emptyState.classList.remove("hidden");
-      cardGrid.innerHTML = "";
-      currentBoards = [];
-      currentMode = "kids";
-      ageInput.focus();
+      state = {
+        ...defaultState,
+        rewardGoal: 25,
+        prize: "Ice cream",
+        kids: [
+          { id: "sawyer-demo", name: "Sawyer", age: 7, rangeKey: "6-8" },
+          { id: "emmett-demo", name: "Emmett", age: 9, rangeKey: "9-10" },
+          { id: "landon-demo", name: "Landon", age: 15, rangeKey: "13-15" }
+        ],
+        selectedKidId: "sawyer-demo",
+        activePeriod: "daily",
+        assignments: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} },
+        completions: { "sawyer-demo": {}, "emmett-demo": {}, "landon-demo": {} }
+      };
+      setMessage("Demo family loaded.");
+      saveState();
+      render();
     });
 
     clearProgressButton.addEventListener("click", () => {
-      if (!currentBoards.length) return;
-      currentBoards.forEach((child) => {
-        delete progressState[getPlanKey(child)];
+      state.completions = {};
+      state.kids.forEach((kid) => {
+        state.completions[kid.id] = {};
       });
-      saveProgress();
-      renderBoards(currentBoards, currentMode);
+      setMessage("Points cleared.");
+      saveState();
+      render();
     });
 
-    cardGrid.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-chore-id]");
-      if (!button || !currentBoards.length) return;
-      if (button.dataset.action === "toggle-assign") return;
-      const planKey = decodeURIComponent(button.dataset.planKey);
+    kidGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-action='select-kid']");
+      if (!button) return;
+      state.selectedKidId = button.dataset.kidId;
+      saveState();
+      render();
+    });
+
+    kidBoard.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-action]");
+      if (!button) return;
+      const action = button.dataset.action;
+
+      if (action === "set-period") {
+        state.activePeriod = button.dataset.period;
+        saveState();
+        render();
+        return;
+      }
+
+      const kidId = button.dataset.kidId;
       const choreId = button.dataset.choreId;
+      state.assignments[kidId] = state.assignments[kidId] || {};
+      state.completions[kidId] = state.completions[kidId] || {};
 
-      if (button.dataset.action === "complete") {
-        progressState[planKey] = progressState[planKey] || {};
-        progressState[planKey][choreId] = !progressState[planKey][choreId];
-        saveProgress();
+      if (action === "toggle-assign") {
+        state.assignments[kidId][choreId] = !state.assignments[kidId][choreId];
+        if (!state.assignments[kidId][choreId]) delete state.completions[kidId][choreId];
       }
 
-      renderBoards(currentBoards, currentMode);
-    });
-
-    cardGrid.addEventListener("change", (event) => {
-      const checkbox = event.target.closest("[data-action='toggle-assign']");
-      if (!checkbox || !currentBoards.length) return;
-      const planKey = decodeURIComponent(checkbox.dataset.planKey);
-      const choreId = checkbox.dataset.choreId;
-      assignmentState[planKey] = assignmentState[planKey] || {};
-      progressState[planKey] = progressState[planKey] || {};
-
-      if (checkbox.checked) {
-        assignmentState[planKey][choreId] = true;
-      } else {
-        delete assignmentState[planKey][choreId];
-        delete progressState[planKey][choreId];
+      if (action === "toggle-complete" && state.assignments[kidId][choreId]) {
+        state.completions[kidId][choreId] = !state.completions[kidId][choreId];
       }
 
-      saveAssignments();
-      saveProgress();
-      renderBoards(currentBoards, currentMode);
-    });
-
-    childNamesInput.addEventListener("change", () => {
-      if (!currentBoards.length) return;
-      const defaultAge = getDefaultAge();
-      const parsed = parseKids(Number.isNaN(defaultAge) ? null : defaultAge);
-      if (!parsed.error) renderBoards(parsed.kids, "kids");
+      saveState();
+      render();
     });
 
     rewardGoalInput.addEventListener("change", () => {
-      if (currentBoards.length) renderBoards(currentBoards, currentMode);
+      syncRewardSettings();
+      saveState();
+      render();
     });
 
     prizeInput.addEventListener("change", () => {
-      if (currentBoards.length) renderBoards(currentBoards, currentMode);
+      syncRewardSettings();
+      saveState();
+      render();
     });
+
+    render();
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
