@@ -871,7 +871,9 @@
       }
       nextState.kids = (nextState.kids || []).map((kid) => ({
         ...kid,
-        pin: kid.pin || "1234"
+        pin: kid.pin || "1234",
+        rewardGoal: Number.isInteger(Number(kid.rewardGoal)) && Number(kid.rewardGoal) > 0 ? Number(kid.rewardGoal) : nextState.rewardGoal,
+        prize: kid.prize || nextState.prize || "a prize"
       }));
       nextState.kids.forEach((kid) => {
         nextState.assignments[kid.id] = nextState.assignments[kid.id] || {};
@@ -930,6 +932,15 @@
       state.rewardGoal = Number.isInteger(goal) && goal > 0 ? goal : 25;
       state.prize = prizeInput.value.trim() || "a prize";
       state.graceHours = Number.isInteger(grace) && grace >= 0 ? grace : 24;
+    }
+
+    function getKidGoal(kid) {
+      const goal = Number(kid.rewardGoal || state.rewardGoal);
+      return Number.isInteger(goal) && goal > 0 ? goal : 25;
+    }
+
+    function getKidPrize(kid) {
+      return kid.prize || state.prize || "a prize";
     }
 
     function getChoreId(kid, period, index) {
@@ -1032,7 +1043,7 @@
         return;
       }
 
-      const kid = { id: makeId(trimmedName), name: trimmedName, age: parsedAge, rangeKey, pin: trimmedPin };
+      const kid = { id: makeId(trimmedName), name: trimmedName, age: parsedAge, rangeKey, pin: trimmedPin, rewardGoal: state.rewardGoal, prize: state.prize };
       state.kids.push(kid);
       state.selectedKidId = kid.id;
       state.assignments[kid.id] = {};
@@ -1068,7 +1079,8 @@
 
       kidGrid.innerHTML = state.kids.map((kid) => {
         const stats = getStats(kid);
-        const percent = Math.min(100, Math.round((stats.points / state.rewardGoal) * 100));
+        const goal = getKidGoal(kid);
+        const percent = Math.min(100, Math.round((stats.points / goal) * 100));
         const plan = chorePlans[kid.rangeKey];
         return `
           <button class="kid-card ${kid.id === state.selectedKidId ? "active" : ""}" type="button" data-action="select-kid" data-kid-id="${kid.id}">
@@ -1077,10 +1089,10 @@
                 <span class="kid-name">${escapeHtml(kid.name)}</span>
                 <span class="muted">Age ${kid.age} · ${plan.label}</span>
               </span>
-              <span class="pill">${stats.points}/${state.rewardGoal}</span>
+              <span class="pill">${stats.points}/${goal}</span>
             </span>
             <span class="progress-track" aria-hidden="true"><span class="progress-fill" style="width: ${percent}%"></span></span>
-            <span class="muted">${stats.approved} approved · ${stats.review} waiting · ${stats.assigned} assigned</span>
+            <span class="muted">${stats.approved} approved · ${stats.review} waiting · ${escapeHtml(getKidPrize(kid))}</span>
           </button>
         `;
       }).join("");
@@ -1099,6 +1111,8 @@
       const activeSection = sections.find((section) => section.key === state.activePeriod) || sections[0];
       const chores = getAllChores(kid, activeSection.key);
       const stats = getStats(kid);
+      const goal = getKidGoal(kid);
+      const prize = getKidPrize(kid);
 
       kidBoard.classList.remove("hidden");
       kidBoard.innerHTML = `
@@ -1108,9 +1122,20 @@
             <span class="pill">Age ${kid.age}</span>
           </div>
           <p class="muted">${plan.note}</p>
-          <p class="muted">${stats.approved} approved · ${stats.review} waiting for review · ${stats.points} available points · ${state.graceHours}h grace</p>
+          <p class="muted">${stats.approved} approved · ${stats.review} waiting · ${stats.points}/${goal} points for ${escapeHtml(prize)} · ${state.graceHours}h grace</p>
+          <div class="mini-grid">
+            <div class="field">
+              <label for="kid-prize-input">Prize for ${escapeHtml(kid.name)}</label>
+              <input id="kid-prize-input" maxlength="40" value="${escapeHtml(prize)}" data-action="kid-prize-change" data-kid-id="${kid.id}">
+            </div>
+            <div class="field">
+              <label for="kid-goal-input">Goal</label>
+              <input id="kid-goal-input" type="number" min="1" max="999" inputmode="numeric" value="${goal}" data-action="kid-goal-change" data-kid-id="${kid.id}">
+            </div>
+            <span class="pill">Individual prize</span>
+          </div>
           <div class="inline-controls">
-            <button class="tertiary" type="button" data-action="redeem" data-kid-id="${kid.id}" ${stats.points >= state.rewardGoal ? "" : "disabled"}>Cash In</button>
+            <button class="tertiary" type="button" data-action="redeem" data-kid-id="${kid.id}" ${stats.points >= goal ? "" : "disabled"}>Cash In</button>
             <button class="ghost" type="button" data-action="close-period" data-kid-id="${kid.id}" data-period="${activeSection.key}">End ${activeSection.title}</button>
           </div>
         </div>
@@ -1195,12 +1220,12 @@
 
       leaderboard.innerHTML = `
         <h2>Leaderboard</h2>
-        <p class="muted">Prize: ${escapeHtml(state.prize || "a prize")}</p>
+        <p class="muted">Each kid tracks their own prize.</p>
         <div class="leader-list">
           ${leaders.length ? leaders.map((leader, index) => `
             <div class="leader-row">
-              <span>${index + 1}. ${escapeHtml(leader.kid.name)}</span>
-              <span>${leader.stats.points}/${state.rewardGoal} available</span>
+              <span>${index + 1}. ${escapeHtml(leader.kid.name)} · ${escapeHtml(getKidPrize(leader.kid))}</span>
+              <span>${leader.stats.points}/${getKidGoal(leader.kid)}</span>
             </div>
           `).join("") : "<p class=\"muted\">Add kids to start tracking points.</p>"}
         </div>
@@ -1280,9 +1305,9 @@
         rewardGoal: 25,
         prize: "Ice cream",
         kids: [
-          { id: "sawyer-demo", name: "Sawyer", age: 7, rangeKey: "6-8", pin: "1234" },
-          { id: "emmett-demo", name: "Emmett", age: 9, rangeKey: "9-10", pin: "1234" },
-          { id: "landon-demo", name: "Landon", age: 15, rangeKey: "13-15", pin: "1234" }
+          { id: "sawyer-demo", name: "Sawyer", age: 7, rangeKey: "6-8", pin: "1234", rewardGoal: 15, prize: "Ice cream" },
+          { id: "emmett-demo", name: "Emmett", age: 9, rangeKey: "9-10", pin: "1234", rewardGoal: 25, prize: "Toy" },
+          { id: "landon-demo", name: "Landon", age: 15, rangeKey: "13-15", pin: "1234", rewardGoal: 40, prize: "Game time" }
         ],
         selectedKidId: "sawyer-demo",
         activePeriod: "daily",
@@ -1605,11 +1630,13 @@ function getDragAfterElement(container, y) {
 
       if (action === "redeem") {
         const stats = getStats(kid);
-        if (stats.points >= state.rewardGoal) {
-          const remaining = stats.points - state.rewardGoal;
-          state.redemptions[kidId].unshift({ at: new Date().toISOString(), prize: state.prize, points: state.rewardGoal, remaining });
-          logAction(`${kid.name} cashed in ${state.rewardGoal} points for ${state.prize}. ${remaining} points remain.`);
-          setMessage(`${kid.name} cashed in for ${state.prize}.`);
+        const goal = getKidGoal(kid);
+        const prize = getKidPrize(kid);
+        if (stats.points >= goal) {
+          const remaining = stats.points - goal;
+          state.redemptions[kidId].unshift({ at: new Date().toISOString(), prize, points: goal, remaining });
+          logAction(`${kid.name} cashed in ${goal} points for ${prize}. ${remaining} points remain.`);
+          setMessage(`${kid.name} cashed in for ${prize}.`);
         }
       }
 
@@ -1648,6 +1675,29 @@ function getDragAfterElement(container, y) {
     });
 
     kidBoard.addEventListener("change", (event) => {
+      const prizeInput = event.target.closest("[data-action='kid-prize-change']");
+      if (prizeInput) {
+        const kid = state.kids.find((item) => item.id === prizeInput.dataset.kidId);
+        if (!kid) return;
+        kid.prize = prizeInput.value.trim() || state.prize || "a prize";
+        logAction(`${kid.name}'s prize changed to ${kid.prize}.`);
+        saveState();
+        render();
+        return;
+      }
+
+      const goalInput = event.target.closest("[data-action='kid-goal-change']");
+      if (goalInput) {
+        const kid = state.kids.find((item) => item.id === goalInput.dataset.kidId);
+        if (!kid) return;
+        const goal = Number(goalInput.value);
+        kid.rewardGoal = Number.isInteger(goal) && goal > 0 ? goal : state.rewardGoal;
+        logAction(`${kid.name}'s prize goal changed to ${kid.rewardGoal}.`);
+        saveState();
+        render();
+        return;
+      }
+
       const input = event.target.closest("[data-action='point-change']");
       if (!input) return;
       const kid = state.kids.find((item) => item.id === input.dataset.kidId);
