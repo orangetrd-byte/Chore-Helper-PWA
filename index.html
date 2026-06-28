@@ -399,6 +399,128 @@
       color: var(--danger);
     }
 
+    .chore-redeem {
+      background: #dbf5e5;
+      color: var(--success);
+    }
+
+    .chore-redeem[disabled] {
+      cursor: not-allowed;
+      opacity: 0.48;
+      transform: none;
+    }
+
+    .kanban-board {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .kanban-column {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      padding: 12px;
+      max-height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .kanban-column-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .kanban-column-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .kanban-badge {
+      display: inline-flex;
+      min-width: 28px;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #e8f2fb;
+      color: var(--primary-dark);
+      font-weight: 900;
+      font-size: .85rem;
+    }
+
+    .kanban-card-list {
+      display: grid;
+      gap: 10px;
+      overflow: auto;
+      padding: 2px;
+      align-content: start;
+      min-height: 60px;
+    }
+
+    .kanban-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      padding: 12px;
+      box-shadow: var(--shadow);
+      cursor: grab;
+      display: grid;
+      gap: 8px;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .kanban-card:active {
+      cursor: grabbing;
+    }
+
+    .kanban-card.dragging {
+      opacity: .75;
+      transform: rotate(2deg) scale(1.02);
+    }
+
+    .kanban-card-title {
+      font-weight: 900;
+      word-break: break-word;
+    }
+
+    .kanban-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .kanban-points {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff4db;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-weight: 900;
+      color: #8a6700;
+      font-size: .85rem;
+    }
+
+    .kanban-tag {
+      background: #eef7ff;
+      color: #0a6da0;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: .8rem;
+    }
+
     .point-input {
       max-width: 88px;
       min-height: 42px;
@@ -583,6 +705,10 @@
 
       <section class="dashboard" aria-label="Kids dashboard">
         <div class="section-header">
+          <div class="inline-controls" style="gap:8px;">
+            <button class="ghost" type="button" id="view-kids-button">Kids</button>
+            <button class="ghost" type="button" id="view-board-button">Board</button>
+          </div>
           <h2>Kids</h2>
           <span class="pill" id="kid-count">0/10</span>
         </div>
@@ -593,6 +719,8 @@
         <section class="board hidden" id="kid-board" aria-live="polite"></section>
         <section class="leaderboard" id="leaderboard" aria-label="Leaderboard"></section>
       </section>
+
+      <section class="board-grid hidden" id="kid-kanban" aria-label="Kanban board"></section>
 
       <section class="empty-state" id="empty-state">
         <h2>Start with your first kid.</h2>
@@ -681,6 +809,7 @@
     const kidCount = document.querySelector("#kid-count");
     const kidGrid = document.querySelector("#kid-grid");
     const kidBoard = document.querySelector("#kid-board");
+    const kidKanban = document.querySelector("#kid-kanban");
     const leaderboard = document.querySelector("#leaderboard");
     const emptyState = document.querySelector("#empty-state");
     const demoButton = document.querySelector("#demo-button");
@@ -692,6 +821,8 @@
     const exportButton = document.querySelector("#export-button");
     const importButton = document.querySelector("#import-button");
     const importFile = document.querySelector("#import-file");
+    const viewKidsButton = document.querySelector("#view-kids-button");
+    const viewBoardButton = document.querySelector("#view-board-button");
     const maxKids = 10;
     const stateKey = "kid-chore-board-state-v3";
     const defaultState = {
@@ -709,7 +840,8 @@
       customChores: {},
       pointOverrides: {},
       carryovers: {},
-      auditLog: []
+      auditLog: [],
+      viewMode: "kids"
     };
     let state = loadState();
 
@@ -925,9 +1057,7 @@
       graceHoursInput.value = state.graceHours;
       kidCount.textContent = `${state.kids.length}/${maxKids}`;
       renderKids();
-      renderBoard();
-      renderLeaderboard();
-      emptyState.classList.toggle("hidden", state.kids.length > 0);
+      renderView();
     }
 
     function renderKids() {
@@ -1195,6 +1325,230 @@
       saveState();
       render();
     });
+
+    viewKidsButton.addEventListener("click", () => {
+      state.viewMode = "kids";
+      saveState();
+      render();
+    });
+
+    viewBoardButton.addEventListener("click", () => {
+      state.viewMode = "board";
+      saveState();
+      render();
+    });
+
+function renderView() {
+  const kid = getSelectedKid();
+  viewKidsButton.classList.toggle("active", state.viewMode !== "board");
+  viewBoardButton.classList.toggle("active", state.viewMode === "board");
+
+  if (!kid) {
+    kidBoard.classList.add("hidden");
+    kidKanban.classList.add("hidden");
+    renderLeaderboard();
+    emptyState.classList.remove("hidden");
+    return;
+  }
+
+  emptyState.classList.add("hidden");
+  if (state.viewMode === "board") {
+    kidBoard.classList.add("hidden");
+    kidKanban.classList.remove("hidden");
+    renderLeaderboard();
+    renderKanbanBoard(kid);
+    return;
+  }
+
+  kidKanban.classList.add("hidden");
+  renderBoard();
+  renderLeaderboard();
+}
+
+function renderKanbanBoard(kid) {
+  const plan = chorePlans[kid.rangeKey];
+  const activeSection = sections.find((section) => section.key === state.activePeriod) || sections[0];
+  const chores = getAllChores(kid, state.activePeriod);
+  const assignments = getKidAssignments(kid);
+  const reviews = getKidReviews(kid);
+  const approvals = getKidApprovals(kid);
+  const columns = [
+    { key: "available", title: "Available" },
+    { key: "assigned", title: "Assigned" },
+    { key: "review", title: "Review" },
+    { key: "approved", title: "Approved" }
+  ];
+
+  kidKanban.innerHTML = `
+    <div style="display:grid; gap:10px;">
+      <div class="kanban-column-header">
+        <div>
+          <h2>${escapeHtml(kid.name)}</h2>
+          <span class="muted">${escapeHtml(plan.label)} · ${escapeHtml(activeSection.title)} · view: board</span>
+        </div>
+        <div class="inline-controls">
+          <input class="point-input" id="new-chore-name" maxlength="60" placeholder="New chore" />
+          <input class="point-input" id="new-chore-points" type="number" min="1" max="25" placeholder="${activeSection.points}" style="max-width:90px;" />
+          <button class="primary" type="button" id="add-kanban-chore">Add</button>
+        </div>
+      </div>
+      <div class="kanban-board">
+        ${columns
+          .map((column) => {
+            const columnChores = chores.filter((chore) => getKanbanColumn(assignments, reviews, approvals, chore.id) === column.key);
+            return `
+              <article class="kanban-column">
+                <header class="kanban-column-header">
+                  <h2>${escapeHtml(column.title)}</h2>
+                  <span class="kanban-badge">${escapeHtml(String(columnChores.length))}</span>
+                </header>
+                <div class="kanban-card-list" data-column="${escapeHtml(column.key)}">
+                  ${columnChores
+                    .map((chore) => {
+                      const points = getChorePoints(kid, chore.id, state.activePeriod);
+                      const tag = state.activePeriod;
+                      return `
+                        <article class="kanban-card" draggable="true" data-chore-id="${escapeHtml(chore.id)}">
+                          <span class="kanban-card-title">${escapeHtml(chore.name)}</span>
+                          <div class="kanban-card-meta">
+                            <span class="kanban-points">⭐ ${escapeHtml(String(points))}</span>
+                            <span class="kanban-tag">${escapeHtml(tag)}</span>
+                          </div>
+                        </article>
+                      `;
+                    })
+                    .join("")}
+                </div>
+              </article>
+            `;
+          })
+          .join("")}
+      </div>
+    </div>
+  `;
+
+  setupKanbanDrag(kid);
+  columns.forEach((column) => {
+    const list = kidKanban.querySelector(`[data-column="${column.key}"]`);
+    if (list) setupKanbanDrop(column.key, list, kid);
+  });
+
+  const addBtn = kidKanban.querySelector("#add-kanban-chore");
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const nameInput = kidKanban.querySelector("#new-chore-name");
+      const pointsInput = kidKanban.querySelector("#new-chore-points");
+      const name = nameInput?.value?.trim();
+      const points = Number(pointsInput?.value);
+      if (!name) {
+        setMessage("Name the new chore first.", "error");
+        return;
+      }
+      const custom = { id: `custom:${kid.id}:${Date.now().toString(36)}`, name, custom: true };
+      state.customChores[kid.id] = state.customChores[kid.id] || { daily: [], weekly: [], monthly: [] };
+      state.customChores[kid.id][state.activePeriod].push(custom);
+      state.pointOverrides[kid.id] = state.pointOverrides[kid.id] || {};
+      state.pointOverrides[kid.id][custom.id] = Number.isInteger(points) && points > 0 ? points : 1;
+      logAction(`Custom chore added for ${kid.name}: ${name}.`);
+      saveState();
+      renderView();
+    });
+  }
+}
+
+function getKanbanColumn(assignments, reviews, approvals, choreId) {
+  if (approvals[choreId]) return "approved";
+  if (reviews[choreId]) return "review";
+  if (assignments[choreId]) return "assigned";
+  return "available";
+}
+
+function setupKanbanDrag(kid) {
+  kidKanban.querySelectorAll(".kanban-card").forEach((card) => {
+    card.addEventListener("dragstart", (event) => {
+      event.dataTransfer.setData("text/plain", card.dataset.choreId);
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+  });
+}
+
+function setupKanbanDrop(columnKey, listEl, kid) {
+  listEl.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    const target = listEl;
+    const afterElement = getDragAfterElement(target, event.clientY);
+    const dragging = kidKanban.querySelector(".kanban-card.dragging");
+    if (!dragging) return;
+    if (afterElement == null) target.appendChild(dragging);
+    else target.insertBefore(dragging, afterElement);
+  });
+
+  listEl.addEventListener("drop", (event) => {
+    event.preventDefault();
+    if (!kid) return;
+    const choreId = event.dataTransfer.getData("text/plain");
+    if (!choreId) return;
+    applyKanbanMove(kid, choreId, columnKey);
+  });
+}
+
+function applyKanbanMove(kid, choreId, columnKey) {
+  state.assignments[kid.id] = state.assignments[kid.id] || {};
+  state.reviews[kid.id] = state.reviews[kid.id] || {};
+  state.approvals[kid.id] = state.approvals[kid.id] || {};
+  state.redemptions[kid.id] = state.redemptions[kid.id] || [];
+  state.customChores[kid.id] = state.customChores[kid.id] || { daily: [], weekly: [], monthly: [] };
+  state.pointOverrides[kid.id] = state.pointOverrides[kid.id] || {};
+  state.carryovers[kid.id] = state.carryovers[kid.id] || {};
+
+  const requiresPin = ["assigned", "review"].includes(columnKey);
+  if (requiresPin && !verifyKidPin(kid)) {
+    setMessage("PIN did not match.", "error");
+    return;
+  }
+
+  if (columnKey === "available") {
+    delete state.assignments[kid.id][choreId];
+    delete state.reviews[kid.id][choreId];
+    delete state.approvals[kid.id][choreId];
+    delete state.carryovers[kid.id][choreId];
+    logAction(`${kid.name} cleared ${choreId} from board.`);
+  } else if (columnKey === "assigned") {
+    state.assignments[kid.id][choreId] = true;
+    delete state.reviews[kid.id][choreId];
+    delete state.approvals[kid.id][choreId];
+    delete state.carryovers[kid.id][choreId];
+    logAction(`${kid.name} assigned ${choreId} on board.`);
+  } else if (columnKey === "review") {
+    state.assignments[kid.id][choreId] = true;
+    state.reviews[kid.id][choreId] = true;
+    delete state.approvals[kid.id][choreId];
+    delete state.carryovers[kid.id][choreId];
+    logAction(`${kid.name} submitted ${choreId} for review on board.`);
+  } else if (columnKey === "approved") {
+    state.assignments[kid.id][choreId] = true;
+    state.reviews[kid.id][choreId] = true;
+    state.approvals[kid.id][choreId] = true;
+    delete state.carryovers[kid.id][choreId];
+    logAction(`Adult approved ${choreId} for ${kid.name} on board.`);
+  }
+
+  saveState();
+  renderView();
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll(".kanban-card:not(.dragging)")];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset, element: child };
+    }
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
 
     kidBoard.addEventListener("click", (event) => {
       const button = event.target.closest("[data-action]");
