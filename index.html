@@ -1154,6 +1154,19 @@
       state.rewardGoal = Number.isInteger(goal) && goal > 0 ? goal : 25;
       state.prize = prizeInput.value.trim() || "a prize";
       state.graceHours = Number.isInteger(grace) && grace >= 0 ? grace : 24;
+
+      const selectedKid = getSelectedKid();
+      if (selectedKid) {
+        selectedKid.rewardGoal = state.rewardGoal;
+        selectedKid.prize = state.prize;
+      }
+    }
+
+    function refreshScoreViews() {
+      saveState();
+      renderKids();
+      renderLeaderboard();
+      renderLockedCalendar();
     }
 
     function getKidGoal(kid) {
@@ -2144,6 +2157,8 @@ function getDragAfterElement(container, y) {
         const kid = state.kids.find((item) => item.id === prizeInput.dataset.kidId);
         if (!kid) return;
         kid.prize = prizeInput.value.trim() || state.prize || "a prize";
+        state.prize = kid.prize;
+        prizeInput.value = kid.prize;
         logAction(`${kid.name}'s prize changed to ${kid.prize}.`);
         saveState();
         render();
@@ -2156,6 +2171,8 @@ function getDragAfterElement(container, y) {
         if (!kid) return;
         const goal = Number(goalInput.value);
         kid.rewardGoal = Number.isInteger(goal) && goal > 0 ? goal : state.rewardGoal;
+        state.rewardGoal = kid.rewardGoal;
+        goalInput.value = kid.rewardGoal;
         logAction(`${kid.name}'s prize goal changed to ${kid.rewardGoal}.`);
         saveState();
         render();
@@ -2174,16 +2191,39 @@ function getDragAfterElement(container, y) {
       render();
     });
 
-    rewardGoalInput.addEventListener("change", () => {
-      syncRewardSettings();
-      saveState();
-      render();
+    kidBoard.addEventListener("input", (event) => {
+      const prizeField = event.target.closest("[data-action='kid-prize-change']");
+      if (prizeField) {
+        const kid = state.kids.find((item) => item.id === prizeField.dataset.kidId);
+        if (!kid) return;
+        kid.prize = prizeField.value.trim() || state.prize || "a prize";
+        state.prize = kid.prize;
+        prizeInput.value = kid.prize;
+        refreshScoreViews();
+        return;
+      }
+
+      const goalField = event.target.closest("[data-action='kid-goal-change']");
+      if (goalField) {
+        const kid = state.kids.find((item) => item.id === goalField.dataset.kidId);
+        if (!kid) return;
+        const goal = Number(goalField.value);
+        if (!Number.isInteger(goal) || goal <= 0) return;
+        kid.rewardGoal = goal;
+        state.rewardGoal = goal;
+        rewardGoalInput.value = goal;
+        refreshScoreViews();
+      }
     });
 
-    prizeInput.addEventListener("change", () => {
+    rewardGoalInput.addEventListener("input", () => {
       syncRewardSettings();
-      saveState();
-      render();
+      refreshScoreViews();
+    });
+
+    prizeInput.addEventListener("input", () => {
+      syncRewardSettings();
+      refreshScoreViews();
     });
 
     graceHoursInput.addEventListener("change", () => {
