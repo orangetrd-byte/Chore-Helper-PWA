@@ -41,7 +41,8 @@
     }
 
     button,
-    input {
+    input,
+    select {
       font: inherit;
     }
 
@@ -66,7 +67,8 @@
       outline-offset: 2px;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       min-height: 52px;
       border: 2px solid var(--line);
@@ -140,6 +142,7 @@
     }
 
     .panel,
+    .login-panel,
     .kid-card,
     .board,
     .leaderboard,
@@ -154,6 +157,12 @@
       display: grid;
       gap: 14px;
       padding: 14px;
+    }
+
+    .login-panel {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
     }
 
     .field-grid,
@@ -694,7 +703,7 @@
       }
 
       .field-grid {
-        grid-template-columns: 1.35fr 0.55fr 0.55fr 0.65fr 0.8fr 0.65fr;
+        grid-template-columns: 1.35fr 0.55fr 0.65fr 0.8fr 0.65fr;
         align-items: end;
       }
 
@@ -735,7 +744,28 @@
       <p class="intro">A mobile-first chore board for assigning age-right jobs, tracking completion, and working toward a family prize.</p>
     </section>
 
-    <section class="layout" aria-label="Family chore manager">
+    <section class="login-panel" id="login-panel" aria-label="Parent login">
+      <h2>Parent Login</h2>
+      <p class="muted">Choose Mom or Dad and enter the 6-digit PIN to unlock the board.</p>
+      <p class="muted">Test PINs: Mom 123456 · Dad 654321</p>
+      <form class="mini-grid" id="login-form">
+        <div class="field">
+          <label for="parent-select">Parent</label>
+          <select id="parent-select">
+            <option value="mom">Mom</option>
+            <option value="dad">Dad</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="parent-pin">6-digit PIN</label>
+          <input id="parent-pin" type="password" maxlength="6" inputmode="numeric" autocomplete="current-password" placeholder="123456">
+        </div>
+        <button class="primary" type="submit">Unlock</button>
+      </form>
+      <p class="message" id="login-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="layout hidden" id="app-layout" aria-label="Family chore manager">
       <form class="panel" id="setup-form" novalidate>
         <div class="field-grid">
           <div class="field">
@@ -745,10 +775,6 @@
           <div class="field">
             <label for="kid-age">Age</label>
             <input id="kid-age" type="number" min="2" max="18" inputmode="numeric" placeholder="7">
-          </div>
-          <div class="field">
-            <label for="kid-pin">Adult PIN</label>
-            <input id="kid-pin" type="password" maxlength="4" inputmode="numeric" placeholder="1234">
           </div>
           <div class="field">
             <label for="reward-goal">Goal</label>
@@ -771,7 +797,7 @@
           <button class="ghost" type="button" id="audit-button">Audit Log</button>
           <button class="tertiary" type="button" id="export-button">Export</button>
           <button class="ghost" type="button" id="import-button">Import</button>
-          <button class="ghost" type="button" id="adult-lock-button">Unlock Adult</button>
+          <button class="ghost" type="button" id="adult-lock-button">Lock App</button>
         </div>
         <input class="hidden" id="import-file" type="file" accept="application/json">
 
@@ -877,9 +903,14 @@
     const kidColors = ["#19a7ce", "#ff8f5f", "#7b61ff", "#2fbf71", "#f5a623", "#ef476f", "#118ab2", "#06d6a0", "#8d6e63", "#9c27b0"];
 
     const form = document.querySelector("#setup-form");
+    const loginPanel = document.querySelector("#login-panel");
+    const appLayout = document.querySelector("#app-layout");
+    const loginForm = document.querySelector("#login-form");
+    const parentSelect = document.querySelector("#parent-select");
+    const parentPinInput = document.querySelector("#parent-pin");
+    const loginMessage = document.querySelector("#login-message");
     const kidNameInput = document.querySelector("#kid-name");
     const kidAgeInput = document.querySelector("#kid-age");
-    const kidPinInput = document.querySelector("#kid-pin");
     const saveKidButton = document.querySelector("#save-kid-button");
     const rewardGoalInput = document.querySelector("#reward-goal");
     const prizeInput = document.querySelector("#prize-input");
@@ -911,9 +942,10 @@
       kids: [],
       selectedKidId: "",
       activePeriod: "daily",
+      activeParent: "",
       rewardGoal: 25,
       prize: "Ice cream",
-      adultPin: "1234",
+      parentPins: { mom: "123456", dad: "654321" },
       graceHours: 24,
       assignments: {},
       reviews: {},
@@ -942,7 +974,11 @@
 
     function normalizeState(nextState) {
       nextState.version = 3;
-      nextState.adultPin = nextState.adultPin || "1234";
+      nextState.parentPins = nextState.parentPins || {
+        mom: nextState.adultPin ? String(nextState.adultPin).padStart(6, "0").slice(-6) : "123456",
+        dad: "654321"
+      };
+      nextState.activeParent = nextState.activeParent || "";
       nextState.reviews = nextState.reviews || {};
       nextState.approvals = nextState.approvals || {};
       nextState.redemptions = nextState.redemptions || {};
@@ -956,7 +992,6 @@
       }
       nextState.kids = (nextState.kids || []).map((kid, index) => ({
         ...kid,
-        pin: kid.pin || "1234",
         rewardGoal: Number.isInteger(Number(kid.rewardGoal)) && Number(kid.rewardGoal) > 0 ? Number(kid.rewardGoal) : nextState.rewardGoal,
         prize: kid.prize || nextState.prize || "a prize",
         avatar: kid.avatar || kidAvatars[index % kidAvatars.length],
@@ -1092,16 +1127,44 @@
       state.auditLog = state.auditLog.slice(0, 250);
     }
 
+    function setLoginMessage(text = "", type = "") {
+      loginMessage.textContent = text;
+      loginMessage.className = `message${type ? ` ${type}` : ""}`;
+    }
+
+    function unlockParent(parent, pin) {
+      if (!/^\d{6}$/.test(pin)) {
+        setLoginMessage("Enter a 6-digit PIN.", "error");
+        return false;
+      }
+
+      if (pin !== state.parentPins[parent]) {
+        setLoginMessage("PIN did not match.", "error");
+        return false;
+      }
+
+      adultUnlocked = true;
+      state.activeParent = parent;
+      parentPinInput.value = "";
+      setLoginMessage();
+      setMessage(`${parent === "mom" ? "Mom" : "Dad"} unlocked the board.`);
+      saveState();
+      render();
+      return true;
+    }
+
+    function lockApp() {
+      adultUnlocked = false;
+      state.activeParent = "";
+      saveState();
+      render();
+      parentPinInput.focus();
+    }
+
     function requireAdultUnlock() {
       if (adultUnlocked) return true;
-      const entered = window.prompt("Enter adult PIN");
-      if (entered === state.adultPin) {
-        adultUnlocked = true;
-        setMessage("Adult controls unlocked.");
-        render();
-        return true;
-      }
-      setMessage("Adult PIN did not match.", "error");
+      setLoginMessage("Unlock as Mom or Dad first.", "error");
+      parentPinInput.focus();
       return false;
     }
 
@@ -1115,10 +1178,9 @@
       return [...presetChores, ...getKidCustomChores(kid, period)];
     }
 
-    function addKid(name, age, pin) {
+    function addKid(name, age) {
       const trimmedName = name.trim();
       const parsedAge = Number(age);
-      const trimmedPin = pin.trim();
       const rangeKey = getRangeForAge(parsedAge);
 
       if (!trimmedName) {
@@ -1136,11 +1198,6 @@
         return;
       }
 
-      if (!/^\d{4}$/.test(trimmedPin)) {
-        setMessage("PIN needs to be 4 numbers.", "error");
-        return;
-      }
-
       if (state.kids.some((kid) => kid.name.toLowerCase() === trimmedName.toLowerCase())) {
         setMessage(`${trimmedName} is already on the board.`, "error");
         return;
@@ -1152,7 +1209,6 @@
         name: trimmedName,
         age: parsedAge,
         rangeKey,
-        pin: trimmedPin,
         rewardGoal: state.rewardGoal,
         prize: state.prize,
         avatar: kidAvatars[identityIndex],
@@ -1169,18 +1225,16 @@
       state.carryovers[kid.id] = {};
       kidNameInput.value = "";
       kidAgeInput.value = "";
-      kidPinInput.value = "";
       setMessage(`${kid.name} added.`);
       logAction(`${kid.name} was added at age ${kid.age}.`);
       saveState();
       render();
     }
 
-    function updateKid(kidId, name, age, pin) {
+    function updateKid(kidId, name, age) {
       const kid = state.kids.find((item) => item.id === kidId);
       const trimmedName = name.trim();
       const parsedAge = Number(age);
-      const trimmedPin = pin.trim();
       const rangeKey = getRangeForAge(parsedAge);
 
       if (!kid) return;
@@ -1195,11 +1249,6 @@
         return;
       }
 
-      if (!/^\d{4}$/.test(trimmedPin)) {
-        setMessage("PIN needs to be 4 numbers.", "error");
-        return;
-      }
-
       if (state.kids.some((item) => item.id !== kidId && item.name.toLowerCase() === trimmedName.toLowerCase())) {
         setMessage(`${trimmedName} is already on the board.`, "error");
         return;
@@ -1208,11 +1257,9 @@
       kid.name = trimmedName;
       kid.age = parsedAge;
       kid.rangeKey = rangeKey;
-      kid.pin = trimmedPin;
       editingKidId = "";
       kidNameInput.value = "";
       kidAgeInput.value = "";
-      kidPinInput.value = "";
       setMessage(`${kid.name} updated.`);
       logAction(`${kid.name}'s profile was updated.`);
       saveState();
@@ -1226,7 +1273,6 @@
       editingKidId = kid.id;
       kidNameInput.value = kid.name;
       kidAgeInput.value = kid.age;
-      kidPinInput.value = kid.pin;
       state.selectedKidId = kid.id;
       setMessage(`Editing ${kid.name}.`);
       render();
@@ -1252,7 +1298,6 @@
       if (editingKidId === kidId) editingKidId = "";
       kidNameInput.value = "";
       kidAgeInput.value = "";
-      kidPinInput.value = "";
       setMessage(`${kid.name} deleted.`);
       logAction(`${kid.name} was deleted from the board.`);
       saveState();
@@ -1264,8 +1309,10 @@
       prizeInput.value = state.prize;
       graceHoursInput.value = state.graceHours;
       saveKidButton.textContent = editingKidId ? "Save Changes" : "Add Kid";
-      adultLockButton.textContent = adultUnlocked ? "Lock Adult" : "Unlock Adult";
-      adultLockButton.className = adultUnlocked ? "tertiary" : "ghost";
+      adultLockButton.textContent = `Lock ${state.activeParent === "dad" ? "Dad" : "Mom"}`;
+      adultLockButton.className = "ghost";
+      loginPanel.classList.toggle("hidden", adultUnlocked);
+      appLayout.classList.toggle("hidden", !adultUnlocked);
       kidCount.textContent = `${state.kids.length}/${maxKids}`;
       renderKids();
       renderView();
@@ -1506,8 +1553,13 @@
       event.preventDefault();
       if (!requireAdultUnlock()) return;
       syncRewardSettings();
-      if (editingKidId) updateKid(editingKidId, kidNameInput.value, kidAgeInput.value, kidPinInput.value);
-      else addKid(kidNameInput.value, kidAgeInput.value, kidPinInput.value);
+      if (editingKidId) updateKid(editingKidId, kidNameInput.value, kidAgeInput.value);
+      else addKid(kidNameInput.value, kidAgeInput.value);
+    });
+
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      unlockParent(parentSelect.value, parentPinInput.value.trim());
     });
 
     demoButton.addEventListener("click", () => {
@@ -1517,9 +1569,9 @@
         rewardGoal: 25,
         prize: "Ice cream",
         kids: [
-          { id: "riley-demo", name: "Riley", age: 6, rangeKey: "6-8", pin: "1234", rewardGoal: 15, prize: "Ice cream", avatar: "⭐", color: "#19a7ce" },
-          { id: "jordan-demo", name: "Jordan", age: 11, rangeKey: "11-12", pin: "1234", rewardGoal: 25, prize: "Toy", avatar: "🚀", color: "#ff8f5f" },
-          { id: "casey-demo", name: "Casey", age: 16, rangeKey: "16-18", pin: "1234", rewardGoal: 40, prize: "Game time", avatar: "🎮", color: "#7b61ff" }
+          { id: "riley-demo", name: "Riley", age: 6, rangeKey: "6-8", rewardGoal: 15, prize: "Ice cream", avatar: "⭐", color: "#19a7ce" },
+          { id: "jordan-demo", name: "Jordan", age: 11, rangeKey: "11-12", rewardGoal: 25, prize: "Toy", avatar: "🚀", color: "#ff8f5f" },
+          { id: "casey-demo", name: "Casey", age: 16, rangeKey: "16-18", rewardGoal: 40, prize: "Game time", avatar: "🎮", color: "#7b61ff" }
         ],
         selectedKidId: "riley-demo",
         activePeriod: "daily",
@@ -1979,13 +2031,7 @@ function getDragAfterElement(container, y) {
     exportButton.addEventListener("click", exportState);
 
     adultLockButton.addEventListener("click", () => {
-      if (adultUnlocked) {
-        adultUnlocked = false;
-        setMessage("Adult controls locked.");
-        render();
-        return;
-      }
-      requireAdultUnlock();
+      lockApp();
     });
 
     importButton.addEventListener("click", () => {
