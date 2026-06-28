@@ -659,8 +659,8 @@
         <div class="assignment-grid">
           <div class="input-row">
             <label for="child-names">Kids and ages</label>
-            <input id="child-names" name="childNames" type="text" maxlength="140" placeholder="Sawyer 7, Emmett 9, Landon 15">
-            <p class="help-text">Use name + age for each kid.</p>
+            <input id="child-names" name="childNames" type="text" maxlength="320" placeholder="Sawyer 7, Emmett 9, Landon 15">
+            <p class="help-text">Use name + age for each kid. Supports up to 10 kids.</p>
           </div>
           <div class="input-row">
             <label for="reward-goal">Reward goal</label>
@@ -787,6 +787,7 @@
     const clearProgressButton = document.querySelector("#clear-progress-button");
     const storageKey = "kid-chore-board-progress";
     const assignmentStorageKey = "kid-chore-board-assignments";
+    const maxKids = 10;
     let currentBoards = [];
     let currentMode = "kids";
     let progressState = loadProgress();
@@ -894,6 +895,10 @@
         return { kids: [], error: "Add each kid with an age, like Sawyer 7, Emmett 9, Landon 15." };
       }
 
+      if (pieces.length > maxKids) {
+        return { kids: [], error: `Kid Chore Board supports up to ${maxKids} kids at a time.` };
+      }
+
       const kids = [];
       const usedNames = new Set();
 
@@ -919,6 +924,9 @@
         if (!usedNames.has(key)) {
           usedNames.add(key);
           kids.push(child);
+          if (kids.length > maxKids) {
+            return { kids: [], error: `Kid Chore Board supports up to ${maxKids} kids at a time.` };
+          }
         }
       }
 
@@ -935,7 +943,7 @@
         .split(/[,;\n]+/)
         .map((name) => name.replace(/\b(1[0-8]|[2-9])\b\s*$/, "").replace(/[:=-]+$/, "").trim())
         .filter(Boolean);
-      const uniqueNames = [...new Set(names.length ? names : ["Helper"])];
+      const uniqueNames = [...new Set(names.length ? names : ["Helper"])].slice(0, maxKids);
       const sampleAge = Number(rangeKey.split("-")[0]);
       return uniqueNames.map((name) => ({ name, age: sampleAge, rangeKey }));
     }
