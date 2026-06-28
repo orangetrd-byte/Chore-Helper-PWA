@@ -746,8 +746,7 @@
 
     <section class="login-panel" id="login-panel" aria-label="Parent login">
       <h2>Parent Login</h2>
-      <p class="muted">Choose Mom or Dad and enter the 6-digit PIN to unlock the board.</p>
-      <p class="muted">Test PINs: Mom 123456 · Dad 654321</p>
+      <p class="muted">Choose Mom or Dad. The first time, enter a new 6-digit PIN. After that, use your saved PIN to unlock the board.</p>
       <form class="mini-grid" id="login-form">
         <div class="field">
           <label for="parent-select">Parent</label>
@@ -758,10 +757,11 @@
         </div>
         <div class="field">
           <label for="parent-pin">6-digit PIN</label>
-          <input id="parent-pin" type="password" maxlength="6" inputmode="numeric" autocomplete="current-password" placeholder="123456">
+          <input id="parent-pin" type="password" maxlength="6" inputmode="numeric" autocomplete="current-password" placeholder="6 digits">
         </div>
         <button class="primary" type="submit">Unlock</button>
       </form>
+      <p class="muted" id="parent-pin-hint"></p>
       <p class="message" id="login-message" role="status" aria-live="polite"></p>
     </section>
 
@@ -908,6 +908,7 @@
     const loginForm = document.querySelector("#login-form");
     const parentSelect = document.querySelector("#parent-select");
     const parentPinInput = document.querySelector("#parent-pin");
+    const parentPinHint = document.querySelector("#parent-pin-hint");
     const loginMessage = document.querySelector("#login-message");
     const kidNameInput = document.querySelector("#kid-name");
     const kidAgeInput = document.querySelector("#kid-age");
@@ -945,7 +946,7 @@
       activeParent: "",
       rewardGoal: 25,
       prize: "Ice cream",
-      parentPins: { mom: "123456", dad: "654321" },
+      parentPins: { mom: "", dad: "" },
       graceHours: 24,
       assignments: {},
       reviews: {},
@@ -974,9 +975,9 @@
 
     function normalizeState(nextState) {
       nextState.version = 3;
-      nextState.parentPins = nextState.parentPins || {
-        mom: nextState.adultPin ? String(nextState.adultPin).padStart(6, "0").slice(-6) : "123456",
-        dad: "654321"
+      nextState.parentPins = {
+        mom: nextState.parentPins?.mom || "",
+        dad: nextState.parentPins?.dad || ""
       };
       nextState.activeParent = nextState.activeParent || "";
       nextState.reviews = nextState.reviews || {};
@@ -1132,13 +1133,23 @@
       loginMessage.className = `message${type ? ` ${type}` : ""}`;
     }
 
+    function updateParentPinHint() {
+      const parentName = parentSelect.value === "mom" ? "Mom" : "Dad";
+      parentPinHint.textContent = state.parentPins[parentSelect.value]
+        ? `${parentName} PIN is set. Enter it to unlock.`
+        : `${parentName} PIN is not set yet. Enter 6 digits to create it.`;
+    }
+
     function unlockParent(parent, pin) {
       if (!/^\d{6}$/.test(pin)) {
         setLoginMessage("Enter a 6-digit PIN.", "error");
         return false;
       }
 
-      if (pin !== state.parentPins[parent]) {
+      if (!state.parentPins[parent]) {
+        state.parentPins[parent] = pin;
+        logAction(`${parent === "mom" ? "Mom" : "Dad"} set a parent PIN.`);
+      } else if (pin !== state.parentPins[parent]) {
         setLoginMessage("PIN did not match.", "error");
         return false;
       }
@@ -1313,6 +1324,7 @@
       adultLockButton.className = "ghost";
       loginPanel.classList.toggle("hidden", adultUnlocked);
       appLayout.classList.toggle("hidden", !adultUnlocked);
+      updateParentPinHint();
       kidCount.textContent = `${state.kids.length}/${maxKids}`;
       renderKids();
       renderView();
@@ -1560,6 +1572,11 @@
     loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
       unlockParent(parentSelect.value, parentPinInput.value.trim());
+    });
+
+    parentSelect.addEventListener("change", () => {
+      setLoginMessage();
+      updateParentPinHint();
     });
 
     demoButton.addEventListener("click", () => {
