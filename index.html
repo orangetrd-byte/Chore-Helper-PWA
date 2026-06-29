@@ -2641,14 +2641,7 @@ function getDragAfterElement(container, y) {
     import { getFirestore, doc, getDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const syncFamilyKey = "kid-chore-board-family-code";
-    const firebaseConfig = {
-      apiKey: "AIzaSyCnZv4KbzuyGQXmAk5Oxbs2usuJ1upkZmk",
-      authDomain: "kid-chore-board.firebaseapp.com",
-      projectId: "kid-chore-board",
-      storageBucket: "kid-chore-board.firebasestorage.app",
-      messagingSenderId: "632826760630",
-      appId: "1:632826760630:web:132dc96dc9b08df72c8517"
-    };
+    const firebaseConfig = window.kidChoreBoardFirebaseConfig || null;
     const familyCodeInput = document.querySelector("#family-code");
     const connectButton = document.querySelector("#sync-connect-button");
     const pushButton = document.querySelector("#sync-push-button");
@@ -2705,6 +2698,12 @@ function getDragAfterElement(container, y) {
 
       localStorage.setItem(syncFamilyKey, familyCode);
       familyCodeInput.value = familyCode;
+
+      if (!firebaseConfig?.apiKey) {
+        setSyncStatus("Sync not configured", "error");
+        window.kidChoreBoard.setMessage("Cloud sync is not configured for this deployment.", "error");
+        return;
+      }
 
       if (!syncApp) syncApp = initializeApp(firebaseConfig);
       syncDb = getFirestore(syncApp);
