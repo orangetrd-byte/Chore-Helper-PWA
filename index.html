@@ -165,6 +165,49 @@
       padding: 14px;
     }
 
+    details.panel {
+      display: block;
+    }
+
+    .panel summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 950;
+      list-style: none;
+    }
+
+    .panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .panel summary::after {
+      content: "+";
+      display: inline-grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border-radius: 999px;
+      background: #eaf7fb;
+      color: var(--primary-dark);
+      font-weight: 950;
+    }
+
+    .panel[open] summary {
+      margin-bottom: 14px;
+    }
+
+    .panel[open] summary::after {
+      content: "−";
+    }
+
+    .setup-form-body {
+      display: grid;
+      gap: 14px;
+    }
+
     .login-panel {
       display: grid;
       gap: 14px;
@@ -959,7 +1002,7 @@
     <section class="hero" aria-labelledby="app-title">
       <div class="hero-badges">
         <div class="badge">Up to 10 kids</div>
-        <div class="badge" id="app-version">MGP Version 1.0.25</div>
+        <div class="badge" id="app-version">MGP Version 1.0.26</div>
       </div>
       <h1 id="app-title">Kid Chore Board</h1>
       <p class="intro">A mobile-first chore board for assigning age-right jobs, tracking completion, and working toward a family prize.</p>
@@ -1003,56 +1046,62 @@
     </section>
 
     <section class="layout hidden" id="app-layout" aria-label="Family chore manager">
-      <form class="panel" id="setup-form" novalidate>
-        <div class="field-grid">
-          <div class="field">
-            <label for="kid-name">Kid name</label>
-            <input id="kid-name" maxlength="32" autocomplete="off" placeholder="Riley">
+      <details class="panel" id="setup-panel">
+        <summary>
+          <span>Family Setup</span>
+          <span class="pill" id="setup-summary">Add or edit kids</span>
+        </summary>
+        <form class="setup-form-body" id="setup-form" novalidate>
+          <div class="field-grid">
+            <div class="field">
+              <label for="kid-name">Kid name</label>
+              <input id="kid-name" maxlength="32" autocomplete="off" placeholder="Riley">
+            </div>
+            <div class="field">
+              <label for="kid-age">Age</label>
+              <input id="kid-age" type="number" min="2" max="18" inputmode="numeric" placeholder="7">
+            </div>
+            <div class="field">
+              <label for="reward-goal">Goal</label>
+              <input id="reward-goal" type="number" min="1" max="200" inputmode="numeric" placeholder="25">
+            </div>
+            <div class="field">
+              <label for="prize-input">Prize</label>
+              <input id="prize-input" maxlength="40" placeholder="Ice cream">
+            </div>
+            <div class="field">
+              <label for="grace-hours">Grace</label>
+              <input id="grace-hours" type="number" min="0" max="168" inputmode="numeric" placeholder="24">
+            </div>
           </div>
-          <div class="field">
-            <label for="kid-age">Age</label>
-            <input id="kid-age" type="number" min="2" max="18" inputmode="numeric" placeholder="7">
-          </div>
-          <div class="field">
-            <label for="reward-goal">Goal</label>
-            <input id="reward-goal" type="number" min="1" max="200" inputmode="numeric" placeholder="25">
-          </div>
-          <div class="field">
-            <label for="prize-input">Prize</label>
-            <input id="prize-input" maxlength="40" placeholder="Ice cream">
-          </div>
-          <div class="field">
-            <label for="grace-hours">Grace</label>
-            <input id="grace-hours" type="number" min="0" max="168" inputmode="numeric" placeholder="24">
-          </div>
-        </div>
 
-        <div class="action-row">
-          <button class="primary" type="submit" id="save-kid-button">Add Kid</button>
-          <button class="secondary" type="button" id="demo-button">Load Demo Family</button>
-          <button class="ghost" type="button" id="clear-progress-button">Clear Points</button>
-          <button class="ghost" type="button" id="audit-button">Audit Log</button>
-          <button class="tertiary" type="button" id="export-button">Export</button>
-          <button class="ghost" type="button" id="import-button">Import</button>
-          <button class="ghost" type="button" id="adult-lock-button">Lock App</button>
-        </div>
-        <input class="hidden" id="import-file" type="file" accept="application/json">
+          <div class="action-row">
+            <button class="primary" type="submit" id="save-kid-button">Add Kid</button>
+            <button class="secondary" type="button" id="demo-button">Load Demo Family</button>
+            <button class="ghost" type="button" id="clear-progress-button">Clear Points</button>
+            <button class="ghost" type="button" id="audit-button">Audit Log</button>
+            <button class="tertiary" type="button" id="export-button">Export</button>
+            <button class="ghost" type="button" id="import-button">Import</button>
+            <button class="ghost" type="button" id="adult-lock-button">Lock App</button>
+          </div>
+          <input class="hidden" id="import-file" type="file" accept="application/json">
 
-        <p class="message" id="message" role="status" aria-live="polite"></p>
-      </form>
+          <p class="message" id="message" role="status" aria-live="polite"></p>
+        </form>
+      </details>
 
-      <section class="panel sync-panel" aria-label="Family sync">
-        <div class="section-header">
-          <h2>Family Sync</h2>
+      <details class="panel sync-panel" aria-label="Family sync">
+        <summary>
+          <span>Family Sync</span>
           <span class="pill" id="sync-status">Local only</span>
-        </div>
+        </summary>
         <div class="action-row">
           <button class="tertiary" type="button" id="sync-connect-button">Connect Sync</button>
           <button class="ghost" type="button" id="sync-push-button">Save This Device</button>
           <button class="ghost" type="button" id="sync-disconnect-button">Disconnect</button>
         </div>
         <p class="muted">Family code is chosen at parent login and shared by every device in the household.</p>
-      </section>
+      </details>
 
       <section class="dashboard" aria-label="Kids dashboard">
         <div class="section-header">
@@ -1166,6 +1215,8 @@
     const lockedLeaderboard = document.querySelector("#locked-leaderboard");
     const kidNameInput = document.querySelector("#kid-name");
     const kidAgeInput = document.querySelector("#kid-age");
+    const setupPanel = document.querySelector("#setup-panel");
+    const setupSummary = document.querySelector("#setup-summary");
     const saveKidButton = document.querySelector("#save-kid-button");
     const rewardGoalInput = document.querySelector("#reward-goal");
     const prizeInput = document.querySelector("#prize-input");
@@ -1401,10 +1452,12 @@
       ];
     }
 
-    function getBadgeShelfMarkup(kid) {
+    function getBadgeShelfMarkup(kid, showLocked = false) {
+      const badges = getKidBadges(kid).filter((badge) => showLocked || badge.earned);
+      if (!badges.length && !showLocked) return "";
       return `
         <span class="achievement-shelf" aria-label="${escapeHtml(kid.name)} achievements">
-          ${getKidBadges(kid).map((badge) => `
+          ${badges.map((badge) => `
             <span class="achievement-badge ${badge.earned ? "" : "locked"}" title="${escapeHtml(badge.label)}">
               <strong aria-hidden="true">${badge.icon}</strong>${escapeHtml(badge.label)}
             </span>
@@ -1651,6 +1704,8 @@
       prizeInput.value = state.prize;
       graceHoursInput.value = state.graceHours;
       saveKidButton.textContent = editingKidId ? "Save Changes" : "Add Kid";
+      setupPanel.open = !state.kids.length || Boolean(editingKidId);
+      setupSummary.textContent = editingKidId ? "Editing kid" : `${state.kids.length}/${maxKids} kids`;
       adultLockButton.textContent = state.activeParent ? `Lock ${getParentLabel(state.activeParent)}` : "Lock App";
       adultLockButton.className = "ghost";
       loginPanel.classList.toggle("hidden", adultUnlocked);
@@ -1767,7 +1822,7 @@
             </span>
             <span class="pill">${stats.points}/${getKidGoal(kid)}</span>
           </div>
-          ${getBadgeShelfMarkup(kid)}
+          ${getBadgeShelfMarkup(kid, true)}
           <div class="calendar-periods">
             ${sections.map((section) => getCalendarPeriodMarkup(kid, section)).join("")}
           </div>
