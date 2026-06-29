@@ -1,4 +1,4 @@
-const CACHE_NAME = "kid-chore-board-mgp-v24";
+const CACHE_NAME = "kid-chore-board-mgp-v25";
 const APP_SHELL = [
   "./",
   "./index.html",
