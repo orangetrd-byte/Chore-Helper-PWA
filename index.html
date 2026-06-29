@@ -701,6 +701,23 @@
       background: #ffffff;
     }
 
+    .tour-list {
+      display: grid;
+      gap: 10px;
+      padding-left: 20px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .warning-note {
+      color: #9f5f00;
+      font-weight: 850;
+    }
+
+    .goal-ready {
+      animation: goal-ready-pop 720ms ease;
+    }
+
     .celebration {
       pointer-events: none;
       position: fixed;
@@ -954,6 +971,16 @@
       }
     }
 
+    @keyframes goal-ready-pop {
+      0%, 100% {
+        transform: scale(1);
+      }
+
+      45% {
+        transform: scale(1.03);
+      }
+    }
+
     @media (min-width: 720px) {
       .app {
         padding: 34px 24px 64px;
@@ -1137,6 +1164,20 @@
         <div class="audit-list" id="audit-list"></div>
       </div>
     </dialog>
+
+    <dialog class="dialog" id="tour-dialog">
+      <div class="dialog-body">
+        <div class="section-header">
+          <h2>Quick Start</h2>
+          <button class="ghost" type="button" id="close-tour-button">Close</button>
+        </div>
+        <ol class="tour-list">
+          <li>Unlock as a parent, then add each kid with an age, goal, and prize.</li>
+          <li>Assign age-right chores from the board or drag them through the kanban view.</li>
+          <li>Kids mark chores done, parents approve them, and points unlock prizes.</li>
+        </ol>
+      </div>
+    </dialog>
   </main>
 
   <script>
@@ -1235,6 +1276,8 @@
     const closeAuditButton = document.querySelector("#close-audit-button");
     const auditDialog = document.querySelector("#audit-dialog");
     const auditList = document.querySelector("#audit-list");
+    const tourDialog = document.querySelector("#tour-dialog");
+    const closeTourButton = document.querySelector("#close-tour-button");
     const exportButton = document.querySelector("#export-button");
     const importButton = document.querySelector("#import-button");
     const importFile = document.querySelector("#import-file");
@@ -1243,6 +1286,8 @@
     const viewBoardButton = document.querySelector("#view-board-button");
     const maxKids = 10;
     const stateKey = "kid-chore-board-state-v3";
+    const exportSchema = "kid-chore-board-state-v3";
+    const tourKey = "kid-chore-board-tour-seen";
     const defaultState = {
       version: 3,
       kids: [],
@@ -1425,6 +1470,15 @@
       return `${kid.rangeKey}:${period}:${index}`;
     }
 
+    function getChoreRangeKey(choreId) {
+      return choreId.startsWith("custom:") ? "" : choreId.split(":")[0];
+    }
+
+    function hasAgeMismatch(kid, choreId) {
+      const choreRangeKey = getChoreRangeKey(choreId);
+      return Boolean(choreRangeKey && choreRangeKey !== kid.rangeKey);
+    }
+
     function getKidAssignments(kid) {
       return state.assignments[kid.id] || {};
     }
@@ -1503,6 +1557,16 @@
     function setLoginMessage(text = "", type = "") {
       loginMessage.textContent = text;
       loginMessage.className = `message${type ? ` ${type}` : ""}`;
+    }
+
+    function showOnboardingTour() {
+      if (localStorage.getItem(tourKey) || !tourDialog?.showModal) return;
+      tourDialog.showModal();
+    }
+
+    function closeOnboardingTour() {
+      localStorage.setItem(tourKey, "true");
+      tourDialog.close();
     }
 
     function getParentKey(parent) {
@@ -1944,11 +2008,13 @@
       const approved = Boolean(getKidApprovals(kid)[choreId]);
       const carryover = Boolean(state.carryovers[kid.id]?.[choreId]);
       const points = getChorePoints(kid, choreId, section.key);
+      const ageMismatch = hasAgeMismatch(kid, choreId);
       return `
         <article class="chore-item ${approved ? "done" : review ? "review" : ""} ${carryover ? "carryover" : ""}">
           <div class="chore-main">
             <span class="chore-name">${escapeHtml(chore.name)}</span>
             <span class="muted">${points} point${points === 1 ? "" : "s"} · ${assigned ? approved ? "Approved" : review ? "Done for review" : "Assigned" : "Not assigned"}${carryover ? " · Carryover" : ""}</span>
+            ${ageMismatch ? `<span class="warning-note">Age check: this chore was built for ${escapeHtml(chorePlans[getChoreRangeKey(choreId)]?.label || "another age band")}.</span>` : ""}
             <span class="inline-controls">
               <label class="muted" for="points-${escapeHtml(choreId)}">Points</label>
               <input class="point-input" id="points-${escapeHtml(choreId)}" type="number" min="1" max="25" inputmode="numeric" value="${points}" data-action="point-change" data-kid-id="${kid.id}" data-chore-id="${choreId}">
@@ -2035,7 +2101,12 @@
     }
 
     function exportState() {
-      const payload = JSON.stringify(normalizeState(state), null, 2);
+      const payload = JSON.stringify({
+        schema: exportSchema,
+        version: 3,
+        exportedAt: new Date().toISOString(),
+        state: normalizeState(state)
+      }, null, 2);
       const blob = new Blob([payload], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -2056,7 +2127,8 @@
       reader.addEventListener("load", () => {
         try {
           const imported = JSON.parse(reader.result);
-          state = normalizeState({ ...defaultState, ...imported });
+          const importedState = imported?.schema === exportSchema && imported.state ? imported.state : imported;
+          state = normalizeState({ ...defaultState, ...importedState });
           logAction("State imported from JSON.");
           saveState();
           setMessage("State imported.");
@@ -2381,22 +2453,40 @@ function applyKanbanMove(kid, choreId, columnKey) {
     delete state.reviews[kid.id][choreId];
     delete state.approvals[kid.id][choreId];
     delete state.carryovers[kid.id][choreId];
+    if (hasAgeMismatch(kid, choreId)) {
+      const rangeLabel = chorePlans[getChoreRangeKey(choreId)]?.label || "another age band";
+      setMessage(`Age check: ${kid.name} is ${kid.age}, but this chore was built for ${rangeLabel}.`, "error");
+    }
     logAction(`${kid.name} assigned ${choreId} on board.`);
-      } else if (columnKey === "review") {
-        state.assignments[kid.id][choreId] = true;
-        state.reviews[kid.id][choreId] = true;
-        delete state.approvals[kid.id][choreId];
-        delete state.carryovers[kid.id][choreId];
-        logAction(`${kid.name} submitted ${choreId} for review on board.`);
-        celebrateKid(kid);
-      } else if (columnKey === "approved") {
-        state.assignments[kid.id][choreId] = true;
-        state.reviews[kid.id][choreId] = true;
-        state.approvals[kid.id][choreId] = true;
-        delete state.carryovers[kid.id][choreId];
-        logAction(`Adult approved ${choreId} for ${kid.name} on board.`);
-        celebrateKid(kid, "✓");
-      }
+  } else if (columnKey === "review") {
+    state.assignments[kid.id][choreId] = true;
+    state.reviews[kid.id][choreId] = true;
+    delete state.approvals[kid.id][choreId];
+    delete state.carryovers[kid.id][choreId];
+    if (hasAgeMismatch(kid, choreId)) {
+      const rangeLabel = chorePlans[getChoreRangeKey(choreId)]?.label || "another age band";
+      setMessage(`Age check: ${kid.name} is ${kid.age}, but this chore was built for ${rangeLabel}.`, "error");
+    }
+    logAction(`${kid.name} submitted ${choreId} for review on board.`);
+    celebrateKid(kid);
+  } else if (columnKey === "approved") {
+    const beforePoints = getStats(kid).points;
+    state.assignments[kid.id][choreId] = true;
+    state.reviews[kid.id][choreId] = true;
+    state.approvals[kid.id][choreId] = true;
+    delete state.carryovers[kid.id][choreId];
+    if (hasAgeMismatch(kid, choreId)) {
+      const rangeLabel = chorePlans[getChoreRangeKey(choreId)]?.label || "another age band";
+      setMessage(`Age check: ${kid.name} is ${kid.age}, but this chore was built for ${rangeLabel}.`, "error");
+    }
+    logAction(`Adult approved ${choreId} for ${kid.name} on board.`);
+    celebrateKid(kid, "✓");
+    if (beforePoints < getKidGoal(kid) && getStats(kid).points >= getKidGoal(kid)) {
+      kidKanban.classList.add("goal-ready");
+      setMessage(`${kid.name} reached the prize goal for ${getKidPrize(kid)}.`);
+      window.setTimeout(() => kidKanban.classList.remove("goal-ready"), 760);
+    }
+  }
 
   saveState();
   renderView();
@@ -2451,6 +2541,10 @@ function getDragAfterElement(container, y) {
           delete state.carryovers[kidId][choreId];
           logAction(`${kid.name} unassigned ${choreId}.`);
         } else {
+          if (hasAgeMismatch(kid, choreId)) {
+            const rangeLabel = chorePlans[getChoreRangeKey(choreId)]?.label || "another age band";
+            setMessage(`Age check: ${kid.name} is ${kid.age}, but this chore was built for ${rangeLabel}.`, "error");
+          }
           logAction(`${kid.name} assigned ${choreId}.`);
         }
       }
@@ -2462,10 +2556,16 @@ function getDragAfterElement(container, y) {
       }
 
       if (action === "approve" && state.reviews[kidId][choreId]) {
+        const beforePoints = getStats(kid).points;
         state.approvals[kidId][choreId] = true;
         delete state.carryovers[kidId][choreId];
         logAction(`Adult approved ${choreId} for ${kid.name}.`);
         celebrateKid(kid, "✓");
+        if (beforePoints < getKidGoal(kid) && getStats(kid).points >= getKidGoal(kid)) {
+          kidBoard.classList.add("goal-ready");
+          setMessage(`${kid.name} reached the prize goal for ${getKidPrize(kid)}.`);
+          window.setTimeout(() => kidBoard.classList.remove("goal-ready"), 760);
+        }
       }
 
       if (action === "redeem") {
@@ -2612,6 +2712,16 @@ function getDragAfterElement(container, y) {
       auditDialog.close();
     });
 
+    closeTourButton.addEventListener("click", closeOnboardingTour);
+
+    tourDialog.addEventListener("cancel", () => {
+      localStorage.setItem(tourKey, "true");
+    });
+
+    tourDialog.addEventListener("close", () => {
+      localStorage.setItem(tourKey, "true");
+    });
+
     exportButton.addEventListener("click", exportState);
 
     adultLockButton.addEventListener("click", () => {
@@ -2629,6 +2739,7 @@ function getDragAfterElement(container, y) {
     });
 
     render();
+    showOnboardingTour();
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
